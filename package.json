@@ -20,6 +20,7 @@
   "main": "out/bundle.js",
   "scripts": {
     "build": "rollup -c",
+    "watch": "rollup -c --watch",
     "lint": "npx eslint src/",
     "lint:staged": "npx lint-staged -c ./lint-staged.config.json"
   },

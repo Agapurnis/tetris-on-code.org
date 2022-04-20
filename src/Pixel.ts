@@ -1,4 +1,3 @@
-import { Game } from "./Game";
 import { Tetrimino, TetriminoType } from "./Tetrimino";
 
 export enum PixelState {
@@ -7,23 +6,10 @@ export enum PixelState {
 }
 
 export class Pixel {
-    /**
-      * The tetrmino this pixel is a part of.
-      * 
-      * - Note that this value is null if the piece has solidifed.
-      * - Note that the `Pixel.type` will always be initialized, despite the nullability status of `Pixel.tetrimino`.
-      */
-    public tetrimino: Tetrimino | null = null;
-
     constructor(
-        private game: Game,
         public coordinates: [number, number],
-        public type: TetriminoType | null = null,
-    ) {
-        const [x, y] = coordinates;
-        this.game.board[y][x] = this;
-        this.type = type;
-    }
+        public tetrimino: TetriminoType | null = null,
+    ) {}
 
     // #region Static Constructors
     public static forTetrimino (
@@ -31,13 +17,17 @@ export class Pixel {
         coordinates: [number, number],
         pixelStatus: PixelState,
     ) {
-        return new Pixel(
-            tetrimino.game,
+        const pixel = new Pixel(
             coordinates,
             pixelStatus === PixelState.FULL ? tetrimino.type : null
         );
+        
+        pixel.falling = true;
+
+        return pixel;
     }
     // #endregion Static Constructors
 
     public solid = false;
+    public falling = false;
 }

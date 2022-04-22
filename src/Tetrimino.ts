@@ -332,4 +332,12 @@ export class Tetrimino {
             (this.y - sOffset[1]) * sizeY,
         );
     }
+
+    public hardDrop () {
+        while (this.move([0, +1])) { 
+            // NOOP - Self terminating movement loop.
+        }
+        
+        this.moveCanvas();
+    }
 }

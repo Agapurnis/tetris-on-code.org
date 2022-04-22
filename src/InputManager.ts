@@ -79,6 +79,7 @@ export class InputManager {
             drawingInterval = undefined as unknown as number;
         }],
         ["press", ["p"], (game: Game) => game.paused ? game.unpause() : game.pause()],
+        ["press", [" "], (game: Game) => game.active?.hardDrop()],
         ["press", ["a"], (game: Game) => game.active?.move([-1,  0]) && game.active?.moveCanvas()],
         ["press", ["d"], (game: Game) => game.active?.move([+1,  0]) && game.active?.moveCanvas()],
         ["press", ["s"], (game: Game) => game.active?.move([ 0, +1]) && game.active?.moveCanvas()],

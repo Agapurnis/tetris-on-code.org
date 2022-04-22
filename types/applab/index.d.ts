@@ -55,6 +55,7 @@ declare global {
     export function setActiveCanvas (id: string): void;
     export function setFillColor (color: string): void;
     export function setStrokeColor (color: string): void;
+    export function setStrokeWidth (width: number): void;
     export function clearCanvas (): void;
     export function rect (x: number, y: number, width: number, height: number): void;
     export function line (x1: number, y1: number, x2: number, y2: number): void;

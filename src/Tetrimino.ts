@@ -1,16 +1,17 @@
+import type { Game } from "./Game";
 import { Pixel, PixelState } from "./Pixel";
-import { Game } from "./Game";
+import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./util/sizes";
 
 function is (a: [Facing, Facing], b: [Facing, Facing]) { return a.every((e, i) => e === b[i]); }
 
 export const enum TetriminoType {
-    O = "O",
-    L = "L",
-    J = "J",
-    I = "I",
-    T = "T",
-    S = "S",
-    Z = "Z",
+    O,
+    L,
+    J,
+    I,
+    T,
+    S,
+    Z,
 }
 
 export const enum TetriminoState {
@@ -86,8 +87,7 @@ export class Tetrimino {
         public state: TetriminoState,
         public readonly type: TetriminoType,
     ) {
-        game.tetriminos.push(this);
-
+        this.game.tetriminos.push(this);
         this.pixels = TETRIMINO_PIXEL_STATES[this.type]
             // Convert all pixel states to actual pixels for this tetrimino with correct positioning.
             .map((row, y) => row.map((pixel, x) => Pixel.forTetrimino(this, [this.x + x, this.y + y], pixel)));
@@ -98,6 +98,7 @@ export class Tetrimino {
         );
     }
         
+    public shouldDraw = true;
     public pixels: Pixel[][];
     public facing = Facing.NORTH;
     public canvas = (+Date.now()).toString(); // lol good enough, very unique
@@ -173,6 +174,7 @@ export class Tetrimino {
       */
     public solidify () {
         this.state = TetriminoState.SOLID;
+        this.shouldDraw = true;
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
                 if (pixel.solid) throw new Error("Cannot solidify already solid pixel!");
@@ -186,9 +188,10 @@ export class Tetrimino {
             });
         });
     }
-    
+
     public rotate (rotation: Rotation, direction: Direction): boolean {
         const t = +Date.now();
+        this.shouldDraw = true;
 
         if (rotation === Rotation.SIMPLE) {
             const rotated: Pixel[][] = [];
@@ -285,11 +288,13 @@ export class Tetrimino {
       *   - Whether or not it has solidified
       */
     public drawCanvas () {
+        if (!this.shouldDraw) return;
+
         setActiveCanvas(this.canvas); clearCanvas();
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
-        const sizeX = Game.ALLOCATED_WIDTH /  this.game.size[1][1];
-        const sizeY = Game.ALLOCATED_HEIGHT / this.game.size[0][1];
+        const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
+        const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
 
         // Draw the tetrimino
         this.pixels.forEach((row, y) => {
@@ -303,13 +308,16 @@ export class Tetrimino {
                         sizeY,
                     );
                 }
+
             });
         });
+
+        this.shouldDraw = false;
     }
 
     public moveCanvas () {
-        const sizeX = Game.ALLOCATED_WIDTH  / this.game.size[1][1];
-        const sizeY = Game.ALLOCATED_HEIGHT / this.game.size[0][1];
+        const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
+        const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
         
         // let dirty = false;
         // const tOffset = TETRIMINO_PIXEL_STATES[this.type].filter((row) => row.every((pixel) => pixel === PixelState.VOID)).length;

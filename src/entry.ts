@@ -1,7 +1,17 @@
 import { Session } from "./Session";
 import { User } from "./User";
 
-const user = new User(getUserId(), "TestAccount", { developer: { logging: { tick: true, rotate: true }}});
+const DEV = {
+    developer: {
+        draw: true,
+        logging: {
+            tick: true,
+            rotate: true,
+        }
+    }
+};
+
+const user = new User(getUserId(), "TestAccount", DEV);
 const session = new Session(user);
 
 session.game.start();

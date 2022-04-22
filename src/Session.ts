@@ -6,7 +6,7 @@ export class Session {
     constructor (
         public user: User,
     ) {
-        setupUserInterface(user);
+        setupUserInterface();
     }
 
     public game = new Game(this);

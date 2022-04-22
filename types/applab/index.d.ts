@@ -1,6 +1,28 @@
 export {};
 
 declare global {
+    export interface ApplabMouseEvent {
+        offsetX: number,
+        currentTargetId: string,
+        offsetY: number,
+        movementX: number,
+        pageX: number,
+        movementY: number,
+        pageY: number,
+        targetId: string,
+        clientX: number,
+        clientY: number,
+        button: number
+        srcElementId: string,
+        ctrlKey: false
+        altKey: false
+        x: number,
+        y: number,
+        metaKey: false
+        type: string,
+        which: number
+        shiftKey: false
+    }
     export function open (url: string): void;
     export function textLabel (id: string, text: string): void;
     export function textInput (id: string, text: string): void;
@@ -11,6 +33,7 @@ declare global {
     export function setProperty (id: string, property: string, value: unknown): void;
     export function setText (id: string, text: string): void;
     export function getText (id: string): string;
+    export function deleteElement (id: string): void;
     export function showElement (id: string): void;
     export function hideElement (id: string): void;
     export function getXPosition (id: string): number;

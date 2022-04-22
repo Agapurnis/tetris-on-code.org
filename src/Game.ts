@@ -37,13 +37,13 @@ export class Game {
     constructor (
         public readonly session: Session,
         public readonly size: BoardSize = DEFAULT_BOARD_SIZE,
-        public tetriminos: Tetrimino[] = [],
         public board: GameBoard = twoDimensionalArray(size[1][0], size[0][0], null)
     ) {} 
 
     private ended = false;
-    private paused = true;
+    public paused = true;
     public readonly bag = new Bag();
+    public tetriminos: Tetrimino[] = [];
     public inputs = new InputManager(this, InputManager.DEFAULT_MAPPINGS);
     public timer: [number, number] = [0, 0];
     public score: ScoreRecord = EMPTY_SCORE_RECORD;
@@ -116,10 +116,19 @@ export class Game {
     private clean (): number {
         const clear = this.board.filter((row) => !row.every((pixel) => pixel && pixel.solid === true ));
         const cleared = this.board.length - clear.length;
+        const adjusted = {} as Record<string, Tetrimino>;
 
         this.board.filter((row) => row.every((pixel) => pixel && pixel.solid === true)).forEach((row) => {
+            // If a row is totally solid, then set all pixels
+            // in the row to no longer be solid or have an
+            // associated tetrimino, but not before marking
+            // the tetrimino to be redrawn as it lost pixels.
             row.forEach((pixelNullable) => {
                 if (pixelNullable) {
+                    if (pixelNullable.tetrimino) {
+                        adjusted[pixelNullable.tetrimino.canvas /* canvas is primary identifier */] = pixelNullable.tetrimino;
+                    }
+
                     pixelNullable.tetrimino = null;
                     pixelNullable.solid = false;
                 }
@@ -131,6 +140,26 @@ export class Game {
             const array = new Array(this.size[1][0]); for (let i = 0; i < array.length; i++) array[i] = null;
             this.board.unshift(array as BoardElement[]);
         }
+
+        // Move the tetriminos whose position has been adjusted by the clearing of the lines.
+        Object.keys(adjusted).map((key) => adjusted[key]).forEach((tetrimino) => {
+            let dirty = false;
+            // If the tetrimino will be under the map, or no longer has pixels,
+            // we should remove it to preserve memory and speed up the game.
+            if (tetrimino.y + cleared + tetrimino.pixels.filter((row) => (dirty ??= row.every((pixel) => pixel && pixel.solid === true ), dirty)).length >= this.size[0][0]) {
+                // To do so, remove it's canvas and all references to the tetrimino.
+                deleteElement(tetrimino.canvas);
+                this.tetriminos.splice(this.tetriminos.indexOf(tetrimino), 1);
+                // TODO: Check if pixels are holding references. I don't think they should?
+            } else {
+                // Otherwise, we should move the tetrimino to its new position.
+                tetrimino.y += cleared;
+                tetrimino.shouldDraw = true;
+
+                tetrimino.drawCanvas();
+                tetrimino.moveCanvas();
+            }
+        });
 
         // Return number of lines cleared.
         return cleared;
@@ -146,7 +175,6 @@ export class Game {
             throw new Error("No active was found, even though it should always be filled!\nThis likely means a tick was ran after the game should have been ended, since no more spots are available.");
         }
 
-        const ch = this.active.y;
         this.active.active = false;
         this.active.solidify();
         this.active.drawCanvas();
@@ -161,25 +189,17 @@ export class Game {
         // TODO: Check for combos.
         const cleared = this.clean();
         const points = 0; // TODO
-
+        
         this.score.points += points;
         this.score.lines  += cleared; 
-
+        
         if (cleared !== 0) {
-            this.tetriminos.forEach((tetrimino) => {
-                if (tetrimino.y > ch) {
-                    tetrimino.x += 0;
-                    tetrimino.y += cleared;
-    
-                    tetrimino.moveCanvas();
-                    tetrimino.drawCanvas();
-                }
-            });
+            this.drawSolidified();
+            // TODO
         }
     }
 
     // #region Rendering Functionality
-
     public drawActive () {
         if (this.ended) return;
         if (this.paused) return;
@@ -190,6 +210,11 @@ export class Game {
         this.active.drawCanvas();
     }
 
+    public drawSolidified () {
+        this.tetriminos.forEach((tetrimino) => {
+            tetrimino.drawCanvas();
+        });
+    }
 
     // #endregion Rendering Functionality
 }

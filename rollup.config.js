@@ -21,6 +21,9 @@ export default {
     plugins: [
         typescript(),
         eslint({ throwOnError: true }),
-        // terser(),
+        terser({
+            compress: true,
+            mangle: false,
+        }),
     ]
 }

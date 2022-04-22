@@ -67,6 +67,8 @@ export class InputManager {
                         const pixel = new Pixel([x, y], null);
                         pixel.solid = true;
                         setActiveCanvas("drawn");
+                        setFillColor("#949494");
+                        setStrokeColor("#525252");
                         rect(x * sizeX, y * sizeY, sizeX, sizeY);
                         game.board[y + offset[0]][x + offset[1]] = pixel;
                     }
@@ -74,8 +76,8 @@ export class InputManager {
             }, 10) as unknown as number /* node typings bruh */;
         }],
         ["click", ["*"], "mouseup", () => {
-            clearInterval(drawingInterval);
             drawingActive = false;
+            drawingInterval && clearInterval(drawingInterval);
             drawingInterval = undefined as unknown as number;
         }],
         ["press", ["p"], (game: Game) => game.paused ? game.unpause() : game.pause()],

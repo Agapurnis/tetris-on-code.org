@@ -7,7 +7,9 @@ function drawLines (game: Game) {
     const sizeX = ALLOCATED_WIDTH /  game.size[1][1];
     const sizeY = ALLOCATED_HEIGHT / game.size[0][1];
 
-    setStrokeColor("#e3e3e3");
+    createCanvas("lines", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);
+    setActiveCanvas("lines");
+    setStrokeColor("#dedede");
     setStrokeWidth(2);
 
     for (let i = 0; i < game.size[0][1]; i++) {
@@ -21,5 +23,6 @@ function drawLines (game: Game) {
 
 export function setupUserInterface (session: Session) {
     drawLines(session.game);
+    setStyle("lines", "z-index: -25");
     setStyle("game-background", "z-index: -30");
 }

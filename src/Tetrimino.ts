@@ -291,6 +291,7 @@ export class Tetrimino {
         if (!this.shouldDraw) return;
 
         setActiveCanvas(this.canvas); clearCanvas();
+        setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
         const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];

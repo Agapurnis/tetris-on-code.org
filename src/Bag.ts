@@ -18,7 +18,7 @@ export class Bag {
     private _b: TetriminoType[] = Bag.randomTypes();
 
     preview (n = 5): TetriminoType[] {
-        return [...this._a, ...this._b].slice(0, n);
+        return this._a.concat(this._b).slice(0, n);
     }
 
     pick (): TetriminoType {

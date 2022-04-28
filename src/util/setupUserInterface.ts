@@ -1,6 +1,5 @@
 import type { Session } from "../Session";
 import type { Game } from "../Game";
-// import type { User } from "../User";
 import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./sizes";
 
 function drawLines (game: Game) {
@@ -25,4 +24,6 @@ export function setupUserInterface (session: Session) {
     drawLines(session.game);
     setStyle("lines", "z-index: -25");
     setStyle("game-background", "z-index: -30");
+    createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);
+
 }

@@ -88,6 +88,7 @@ export class Tetrimino {
         public readonly type: TetriminoType,
     ) {
         this.game.tetriminos.push(this);
+        this.active = true;
         this.pixels = TETRIMINO_PIXEL_STATES[this.type]
             // Convert all pixel states to actual pixels for this tetrimino with correct positioning.
             .map((row, y) => row.map((pixel, x) => Pixel.forTetrimino(this, [this.x + x, this.y + y], pixel)));
@@ -255,6 +256,7 @@ export class Tetrimino {
                 let valid = true;
             
                 {
+                    // Only rotate if the rotation is valid after the translation (which can notably be [0,0])
                     valid = valid && this.move(translation);
                     valid = valid && this.rotate(Rotation.SIMPLE, direction);
                 }
@@ -263,6 +265,9 @@ export class Tetrimino {
                     if (this.game.session.user.config.developer.logging.rotate) {
                         console.log(`Rotated (super) in ${+Date.now() - t}ms`);
                     }
+
+                    setActiveCanvas(this.canvas);
+                    clearCanvas();
 
                     return true;
                 } else {
@@ -288,12 +293,15 @@ export class Tetrimino {
       *   - Whether or not it has solidified
       */
     public drawCanvas () {
-        if (!this.shouldDraw) return;
+        console.log(this.active);
+        if (!this.active) setActiveCanvas("solid");
+        if ( this.active) setActiveCanvas(this.canvas);
+        if ( this.active && !this.shouldDraw) return;
 
-        setActiveCanvas(this.canvas); clearCanvas();
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
+        // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
         const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
         const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
 
@@ -303,8 +311,8 @@ export class Tetrimino {
                 if (pixel.tetrimino === null) return;
                 if (pixel.solid || pixel.falling) {
                     rect(
-                        x * sizeX,
-                        y * sizeY,
+                        ((this.active ? 0 : this.x) + x) * sizeX,
+                        ((this.active ? 0 : this.y) + y) * sizeY,
                         sizeX,
                         sizeY,
                     );
@@ -313,7 +321,7 @@ export class Tetrimino {
             });
         });
 
-        this.shouldDraw = false;
+        // this.shouldDraw = false;
     }
 
     public moveCanvas () {

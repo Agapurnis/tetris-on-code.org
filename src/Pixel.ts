@@ -7,6 +7,7 @@ export enum PixelState {
 
 export class Pixel {
     constructor(
+        /** absolute */
         public coordinates: [number, number],
         public tetrimino: Tetrimino | null = null,
     ) {}

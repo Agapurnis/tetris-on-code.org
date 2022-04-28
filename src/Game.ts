@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import type { Pixel } from "./Pixel";
+import { Pixel, PixelState } from "./Pixel";
 import type { Session } from "./Session";
 import { InputManager } from "./InputManager";
 import { twoDimensionalArray } from "./util/twoDimensionalArray";
@@ -119,14 +119,17 @@ export class Game {
         const adjusted = {} as Record<string, Tetrimino>;
 
         this.board.filter((row) => row.every((pixel) => pixel && pixel.solid === true)).forEach((row) => {
-            // If a row is totally solid, then set all pixels
-            // in the row to no longer be solid or have an
-            // associated tetrimino, but not before marking
-            // the tetrimino to be redrawn as it lost pixels.
+            // If a row is totally solid, then set all pixels in the row to no longer be solid or have an
+            // associated tetrimino, but not before marking the tetrimino to be redrawn as it lost pixels.
             row.forEach((pixelNullable) => {
                 if (pixelNullable) {
                     if (pixelNullable.tetrimino) {
-                        adjusted[pixelNullable.tetrimino.canvas /* canvas is primary identifier */] = pixelNullable.tetrimino;
+                        // We use the canvas (id) as the primary identifier since it should always be unique
+                        // unless more than two tetriminos are generated on the same millisecond, which should
+                        // be impossible unless the user modifies the game, as the game by default never gets
+                        // to a tick rate of lte 1ms.
+
+                        adjusted[pixelNullable.tetrimino.canvas] = pixelNullable.tetrimino;
                     }
 
                     pixelNullable.tetrimino = null;
@@ -143,22 +146,10 @@ export class Game {
 
         // Move the tetriminos whose position has been adjusted by the clearing of the lines.
         Object.keys(adjusted).map((key) => adjusted[key]).forEach((tetrimino) => {
-            let dirty = false;
-            // If the tetrimino will be under the map, or no longer has pixels,
-            // we should remove it to preserve memory and speed up the game.
-            if (tetrimino.y + cleared + tetrimino.pixels.filter((row) => (dirty ??= row.every((pixel) => pixel && pixel.solid === true ), dirty)).length >= this.size[0][0]) {
-                // To do so, remove it's canvas and all references to the tetrimino.
-                deleteElement(tetrimino.canvas);
-                this.tetriminos.splice(this.tetriminos.indexOf(tetrimino), 1);
-                // TODO: Check if pixels are holding references. I don't think they should?
-            } else {
-                // Otherwise, we should move the tetrimino to its new position.
-                tetrimino.y += cleared;
-                tetrimino.shouldDraw = true;
-
-                tetrimino.drawCanvas();
-                tetrimino.moveCanvas();
-            }
+            // Mutate the pixels of the tetrimino so that we only
+            // effect the pixels that should actually be moving.
+            tetrimino.pixels = tetrimino.pixels.filter((_, i) => i + tetrimino.y + cleared <= 0);
+            tetrimino.y += cleared;
         });
 
         // Return number of lines cleared.

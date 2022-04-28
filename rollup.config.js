@@ -1,5 +1,4 @@
 // @ts-check
-import { __spreadArray  } from "tslib";
 import { terser } from "rollup-plugin-terser";
 import typescript from "rollup-plugin-typescript2";
 import eslint from '@rbnlffl/rollup-plugin-eslint';

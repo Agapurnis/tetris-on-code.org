@@ -87,11 +87,15 @@ export class Tetrimino {
         public state: TetriminoState,
         public readonly type: TetriminoType,
     ) {
-        this.game.tetriminos.push(this);
+        this.game.tetriminos = this.game.tetriminos.concat([this]);
         this.active = true;
         this.pixels = TETRIMINO_PIXEL_STATES[this.type]
             // Convert all pixel states to actual pixels for this tetrimino with correct positioning.
-            .map((row, y) => row.map((pixel, x) => Pixel.forTetrimino(this, [this.x + x, this.y + y], pixel)));
+            .map((row, y) => row.map((pixel, x) => Pixel.forTetrimino(this, [this.x + x, this.y + y], pixel === PixelState.FULL)));
+
+        const id = (+Date.now()).toString();
+        this.id = id;
+        this.canvas = id;
 
         createCanvas(this.canvas,
             (300 / this.game.size[1][1]) * 4,
@@ -99,12 +103,12 @@ export class Tetrimino {
         );
     }
         
-    public shouldDraw = true;
-    public pixels: Pixel[][];
+    public pixels: (Pixel | null)[][];
     public facing = Facing.NORTH;
-    public canvas = (+Date.now()).toString(); // lol good enough, very unique
+    public canvas: string;
     public active = false;
     public held   = false;
+    public id: string;
 
     /**
       * @returns the tetrimino, **or null** if it cannot be placed
@@ -145,7 +149,7 @@ export class Tetrimino {
             for (let x = 0; x < this.pixels[y].length; x++) {
                 const pixel = this.pixels[y][x];
 
-                if (pixel.tetrimino !== null) {
+                if (pixel) {
                     const [absoluteX, absoluteY] = [
                         this.x + x,
                         this.y + y,
@@ -175,30 +179,32 @@ export class Tetrimino {
       */
     public solidify () {
         this.state = TetriminoState.SOLID;
-        this.shouldDraw = true;
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
+                if (!pixel) return;
                 if (pixel.solid) throw new Error("Cannot solidify already solid pixel!");
-                if (pixel.tetrimino !== null && pixel.falling) {
-                    pixel.falling = false;
-                    pixel.solid = true;
-                    if (this.game.board[this.y + y]?.[this.x + x] === null) {
-                        this.game.board[this.y + y]  [this.x + x] = pixel;
-                    }
+
+                pixel.solid = true;
+                if (this.game.board[this.y + y]?.[this.x + x] === null) {
+                    this.game.board[this.y + y]  [this.x + x] = pixel;
                 }
             });
         });
+
+        const oid = this.canvas;
+        this.active = false;
+        this.draw();
+        deleteElement(oid);
     }
 
     public rotate (rotation: Rotation, direction: Direction): boolean {
         const t = +Date.now();
-        this.shouldDraw = true;
 
         if (rotation === Rotation.SIMPLE) {
-            const rotated: Pixel[][] = [];
+            const rotated: (Pixel | null)[][] = [];
 
             for (let col = 0; col < this.pixels[0].length; col++) {
-              const temp: Pixel[] = [];
+              const temp: (Pixel | null)[] = [];
         
               for (let row = 0; row < this.pixels.length; row++) {
                 if (direction === Direction.CLOCKWISE) {
@@ -285,6 +291,10 @@ export class Tetrimino {
         throw new Error("Invalid rotation type provided!");
     }
 
+    public colors () {
+        return this.game.session.user.theme.tetriminos[this.type];
+    }
+
     /**
       * Draws the tetrimino. If this piece is falling, it *should only be called once unless a rotation is preformed*.
       * Note that the visual appearance of the tetrimino is deterministic on the state, notably the following:
@@ -292,12 +302,8 @@ export class Tetrimino {
       *   - User configuration
       *   - Whether or not it has solidified
       */
-    public drawCanvas () {
-        console.log(this.active);
-        if (!this.active) setActiveCanvas("solid");
-        if ( this.active) setActiveCanvas(this.canvas);
-        if ( this.active && !this.shouldDraw) return;
-
+    public draw () {
+        setActiveCanvas(this.active ? this.canvas : "solid");
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
@@ -308,20 +314,21 @@ export class Tetrimino {
         // Draw the tetrimino
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
-                if (pixel.tetrimino === null) return;
-                if (pixel.solid || pixel.falling) {
+                if (this.active ? pixel : pixel && pixel.solid) {
                     rect(
-                        ((this.active ? 0 : this.x) + x) * sizeX,
-                        ((this.active ? 0 : this.y) + y) * sizeY,
+                        (this.active ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
+                        (this.active ? y : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
                         sizeX,
                         sizeY,
                     );
                 }
-
             });
         });
+    }
 
-        // this.shouldDraw = false;
+    public clear () {
+        setActiveCanvas(this.canvas);
+        clearCanvas();
     }
 
     public moveCanvas () {

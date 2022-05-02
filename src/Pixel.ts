@@ -1,4 +1,4 @@
-import { Tetrimino } from "./Tetrimino";
+import { Tetrimino, TetriminoState } from "./Tetrimino";
 
 export enum PixelState {
     FULL,
@@ -9,26 +9,25 @@ export class Pixel {
     constructor(
         /** absolute */
         public coordinates: [number, number],
-        public tetrimino: Tetrimino | null = null,
+        public tetrimino: Tetrimino | null,
+        public color: Record<TetriminoState, string>,
     ) {}
 
     // #region Static Constructors
+    /** @returns null for empty */
     public static forTetrimino (
         tetrimino: Tetrimino,
         coordinates: [number, number],
-        pixelStatus: PixelState,
-    ) {
-        const pixel = new Pixel(
+        falling = false,
+    ): Pixel | null {
+        return falling ? new Pixel(
             coordinates,
-            pixelStatus === PixelState.FULL ? tetrimino : null
-        );
-        
-        pixel.falling = true;
-
-        return pixel;
+            tetrimino,
+            tetrimino.colors(),
+        ) : null;
     }
-    // #endregion Static Constructors
 
+    // #endregion Static Constructors
     public solid = false;
-    public falling = false;
+
 }

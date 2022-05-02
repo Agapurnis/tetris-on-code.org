@@ -3,8 +3,9 @@ import { Pixel, PixelState } from "./Pixel";
 import type { Session } from "./Session";
 import { InputManager } from "./InputManager";
 import { twoDimensionalArray } from "./util/twoDimensionalArray";
-import { Tetrimino } from "./Tetrimino";
+import { Tetrimino, TetriminoState } from "./Tetrimino";
 import { Bag } from "./Bag";
+import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./util/sizes";
 
 interface ScoreRecord {
     points: number,
@@ -67,7 +68,7 @@ export class Game {
         this.inputs.listen();
         this.paused = false;
         this.active = Tetrimino.ofTypeForGame(this.bag.pick(), this);
-        this.active!.drawCanvas();
+        this.active!.draw();
         this.active!.moveCanvas();
         this.timer = [ms, setInterval(() => {
             this.tick();
@@ -114,42 +115,49 @@ export class Game {
       * Cleans lines that are full, and returns the number of lines cleared.
       */
     private clean (): number {
-        const clear = this.board.filter((row) => !row.every((pixel) => pixel && pixel.solid === true ));
+        let start: number | undefined;
+        let temp = false;
+        const b = this.board;
+        const clear = this.board.filter((row, i) => (temp = !row.every((pixel) => pixel !== null ? pixel.solid : false), !temp ? (start ??= i, temp) : temp));
         const cleared = this.board.length - clear.length;
-        const adjusted = {} as Record<string, Tetrimino>;
+        const adjusted: Record<string, Tetrimino> = {};
+        if (!start) return 0;
+        console.log(start);
 
-        this.board.filter((row) => row.every((pixel) => pixel && pixel.solid === true)).forEach((row) => {
-            // If a row is totally solid, then set all pixels in the row to no longer be solid or have an
-            // associated tetrimino, but not before marking the tetrimino to be redrawn as it lost pixels.
-            row.forEach((pixelNullable) => {
-                if (pixelNullable) {
-                    if (pixelNullable.tetrimino) {
-                        // We use the canvas (id) as the primary identifier since it should always be unique
-                        // unless more than two tetriminos are generated on the same millisecond, which should
-                        // be impossible unless the user modifies the game, as the game by default never gets
-                        // to a tick rate of lte 1ms.
-
-                        adjusted[pixelNullable.tetrimino.canvas] = pixelNullable.tetrimino;
-                    }
-
-                    pixelNullable.tetrimino = null;
-                    pixelNullable.solid = false;
-                }
-            });
-        });
-
-        // Now add the blank rows so we don't actually lose the entire existance of a line, haha.
+        // Remove the filled rows and replace them with empty ones.
+        this.board.splice(start, cleared);
         for (let i = 0; i < cleared; i++) {
-            const array = new Array(this.size[1][0]); for (let i = 0; i < array.length; i++) array[i] = null;
+            const array = new Array(this.size[1][0]);
+            for (let j = 0; j < array.length; j++) {
+                const e = b[b.length-i]?.[j];
+                if (e && e.solid) adjusted[e.tetrimino!.id] = e.tetrimino!;
+                array[j] = null;
+            }
             this.board.unshift(array as BoardElement[]);
         }
 
-        // Move the tetriminos whose position has been adjusted by the clearing of the lines.
+        // Adjust the pixels of the tetriminos that had an intersection of their pixels with the cleared lines.
         Object.keys(adjusted).map((key) => adjusted[key]).forEach((tetrimino) => {
-            // Mutate the pixels of the tetrimino so that we only
-            // effect the pixels that should actually be moving.
-            tetrimino.pixels = tetrimino.pixels.filter((_, i) => i + tetrimino.y + cleared <= 0);
-            tetrimino.y += cleared;
+            tetrimino.pixels.splice(start! - tetrimino.y, cleared);
+            for (let i = 0; i < cleared; i++) {
+                const array = new Array(tetrimino.pixels.length);
+                for (let j = 0; j < array.length; j++) { array[j] = null; }
+                tetrimino.pixels.unshift(array as BoardElement[]);
+            }
+
+            // Update the actual pixels on the board from the new state of the tetrimino's pixels.
+            tetrimino.pixels.forEach((row, y) => {
+                row.forEach((pixel, x) => {
+                    this.board[y + tetrimino.y][x + tetrimino.x] = pixel;
+                });
+            });
+        });
+
+        // Move down every tetrimino that was above the cleared lines.
+        this.tetriminos.forEach((tetrimino) => {
+            if (tetrimino.y  < start!) {
+                tetrimino.y += cleared;
+            }
         });
 
         // Return number of lines cleared.
@@ -157,7 +165,7 @@ export class Game {
     }
 
     /**
-      * Miscellaneous functionality that should be run after a line is cleared.
+      * Miscellaneous functionality that should be run after a piece is dropped.
       */
     private clear () {
         if (this.ended) return;
@@ -166,12 +174,10 @@ export class Game {
             throw new Error("No active was found, even though it should always be filled!\nThis likely means a tick was ran after the game should have been ended, since no more spots are available.");
         }
 
-        this.active.active = false;
         this.active.solidify();
-        this.active.drawCanvas();
         // Pick a new tetrimino
         this.active = Tetrimino.ofTypeForGame(this.bag.pick(), this);
-        this.active?.drawCanvas();
+        this.active?.draw();
 
         if (!this.active) {
             throw new Error("Game over!");
@@ -185,27 +191,18 @@ export class Game {
         this.score.lines  += cleared; 
         
         if (cleared !== 0) {
-            this.drawSolidified();
+            this.draw();
             // TODO
         }
     }
 
-    // #region Rendering Functionality
-    public drawActive () {
-        if (this.ended) return;
-        if (this.paused) return;
-        if (!this.active) {
-            throw new Error("No active was found while trying to draw it!");
-        }
-
-        this.active.drawCanvas();
-    }
-
-    public drawSolidified () {
+    public draw () {
+        setActiveCanvas("solid");
+        clearCanvas();
+        
+        this.active?.clear();
         this.tetriminos.forEach((tetrimino) => {
-            tetrimino.drawCanvas();
+            tetrimino.draw();
         });
     }
-
-    // #endregion Rendering Functionality
 }

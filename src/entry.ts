@@ -5,8 +5,8 @@ const DEV = {
     developer: {
         draw: true,
         logging: {
-            tick: true,
-            rotate: true,
+            tick: false,
+            rotate: false,
         }
     }
 };

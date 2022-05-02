@@ -1,13 +1,5 @@
 import type { Game } from "./Game";
-import { Pixel } from "./Pixel";
-import { Direction, Rotation } from "./Tetrimino";
-import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./util/sizes";
-
-createCanvas("drawn", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);
-
-let drawingEvent: ApplabMouseEvent;
-let drawingActive = false;
-let drawingInterval: number;
+import { Direction, Rotation  } from "./Tetrimino";
 
 export type InputMapping =
     | readonly [type: "press", key: readonly string[], action: (game: Game, event: KeyboardEvent) => void]
@@ -42,51 +34,13 @@ export class InputManager {
 
     // #region Static Mappings
     public static readonly DEFAULT_MAPPINGS = [
-        ["click", ["*"], "mousedown", () => drawingActive = true],
-        ["click", ["*"], "mousemove", (game: Game, event: ApplabMouseEvent) => {
-            if (drawingActive) drawingEvent = event;
-            if (drawingActive) drawingInterval ??= setInterval(() => {
-                if (!drawingActive) return;
-
-                const sizeX = ALLOCATED_WIDTH /  game.size[1][1];
-                const sizeY = ALLOCATED_HEIGHT / game.size[0][1];
-
-                const offset = [
-                    game.size[0][0] - game.size[0][1],
-                    game.size[1][0] - game.size[1][1],
-                ];
-
-                if (game.session.user.config.developer.draw) {
-                    // Drawing functionality for debugging sessions.
-                    // To get the position of the pixel to place, we must round it based off the dimensions of the game board.
-                    const x = Math.round(drawingEvent.x / sizeX);
-                    const y = Math.round(drawingEvent.y / sizeY);
-                    // Now we place a pixel at the rounded position.
-                    // We'll need to have an active tetrimino to do this, otherwise it wont work.
-                    if (game.board[y + offset[0]]?.[x + offset[1]] === null) {
-                        const pixel = new Pixel([x, y], null);
-                        pixel.solid = true;
-                        setActiveCanvas("drawn");
-                        setFillColor("#949494");
-                        setStrokeColor("#525252");
-                        rect(x * sizeX, y * sizeY, sizeX, sizeY);
-                        game.board[y + offset[0]][x + offset[1]] = pixel;
-                    }
-                }
-            }, 10) as unknown as number /* node typings bruh */;
-        }],
-        ["click", ["*"], "mouseup", () => {
-            drawingActive = false;
-            drawingInterval && clearInterval(drawingInterval);
-            drawingInterval = undefined as unknown as number;
-        }],
         ["press", ["p"], (game: Game) => game.paused ? game.unpause() : game.pause()],
         ["press", [" "], (game: Game) => game.active?.hardDrop()],
         ["press", ["a"], (game: Game) => game.active?.move([-1,  0]) && game.active?.moveCanvas()],
         ["press", ["d"], (game: Game) => game.active?.move([+1,  0]) && game.active?.moveCanvas()],
         ["press", ["s"], (game: Game) => game.active?.move([ 0, +1]) && game.active?.moveCanvas()],
-        ["press", ["z", "q"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.COUNTERCLOCKWISE) && game.active?.drawCanvas()],
-        ["press", ["x", "e"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.CLOCKWISE       ) && game.active?.drawCanvas()],
+        ["press", ["z", "q"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.COUNTERCLOCKWISE) && game.active?.draw()],
+        ["press", ["x", "e"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.CLOCKWISE       ) && game.active?.draw()],
     ] as const; // TODO
     // #endregion Static Mappings
 }

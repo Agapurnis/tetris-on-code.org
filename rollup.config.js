@@ -30,10 +30,10 @@ export default {
     plugins: [
         typescript(),
         eslint({ throwOnError: true }),
-        terser({
-            output,
-            mangle: false,
-            compress: true,
-        }),
+        // terser({
+        //     output,
+        //     mangle: false,
+        //     compress: true,
+        // }),
     ]
 }

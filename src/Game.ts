@@ -131,24 +131,9 @@ export class Game {
         // If we never removed any rows, this is undefined, which could cause some issues.
         if (!start) return 0;
         
-        
-        // Erase all traces of non-active tetriminos.
-        // This is done because when we add the new states, we don't want to have old ones still present.
-        this.tetriminos.forEach((tetrimino) => {
-            // Replace all of the pixels occupied by tetriminos.
-            tetrimino.pixels.forEach((row, y) => {
-                row.forEach((_, x) => {
-                    // If this new position is out of bounds.
-                    if (!b[tetrimino.y + y]) return;
-                    // Set the position it occupied to null.
-                    b[tetrimino.y + y][x] = null;
-                });
-            });
-        });
-
         // Remove the filled rows.
         b.splice(start, cleared);
-
+        
         // Add new empty rows to the start so that things shift down and we maintain a constant board size.
         for (let i = 0; i < cleared; i++) {
             // Initialize an array that will be used to fill the gap left by the cleared rows.
@@ -161,11 +146,11 @@ export class Game {
                 // `null` refers to an empty spcae
                 // `Pixel` means exactly what you think.
                 // `undefined` means we went OOB
-                const e = b[b.length-i]?.[j];
+                const e = b[start + i]?.[j];
 
                 // If the pixel exists (not `undefined` or `null`) and is indeed solid, record this
                 // tetrimino as being "adjusted", meaning we will end up mutating it's inner pixel state to reflect this change.
-                if (e && e.solid) {
+                if (e) {
                     adjusted[e.tetrimino!.id] = e.tetrimino!;
                 }
 
@@ -207,21 +192,9 @@ export class Game {
             
             // Move tetriminos above the cleared lines.
             // If the tetriminos below or at that level, this would cause them to be moved off-screen, which isn't smart.
-            if (tetrimino.y  < start!) {
+            if (tetrimino.y  < start! && !adjusted[tetrimino.id]) {
                 tetrimino.y += cleared;
-                console.log(tetrimino.y);
             }
-
-            // TODO: Remove tetriminos that are now off-screen.
-
-            // Update the board by setting all tetrimino pixels onto the game board.
-            tetrimino.pixels.forEach((row, y) => {
-                row.forEach((pixel, x) => {
-                    if (!pixel) return; // We don't want to set null pixels, as that will get rid of actual pixels.
-                    if (!b[tetrimino.y + y]) return; // We should not attempt to set anything out of bounds.
-                    b[tetrimino.y + y][x] = pixel;
-                });
-            });
         });
 
         // Set new board state.

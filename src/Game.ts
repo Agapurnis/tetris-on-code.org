@@ -124,12 +124,10 @@ export class Game {
         const b = this.board;
     
         // This creates a version of the board without full rows, while also setting `start` to the index at which it first begins removing.
-        const clear = this.board.filter((row, i) => (temp = !row.every((pixel) => pixel !== null ? pixel.solid : false), !temp ? (start ??= i, temp) : temp));
+        const clear = this.board.filter((row, i) => (temp = row.every((pixel) => pixel !== null), temp ? (start ??= i, !temp) : !temp));
         const cleared = this.board.length - clear.length; // Number of lines cleared.
         const adjusted: Record<string, Tetrimino> = {};
-
-        // If we never removed any rows, this is undefined, which could cause some issues.
-        if (!start) return 0;
+        start ??= this.board.length;
         
         // Remove the filled rows.
         b.splice(start, cleared);
@@ -169,7 +167,8 @@ export class Game {
         Object.keys(adjusted).map((key) => adjusted[key]).forEach((tetrimino) => {
             // Starting at the row relative to the tetrimino and not the whole board,
             // remove n lines, where n is the number of lines cleared for the board.
-            tetrimino.pixels.splice(start! - tetrimino.y, cleared);
+            console.log(tetrimino.y, start, cleared);
+            tetrimino.pixels.splice(tetrimino.y - start!, cleared);
 
             // Replace the deleted rows with empty ones starting from the top,
             // which will shift everything down and ensure constant length.

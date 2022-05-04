@@ -10,9 +10,12 @@ export function recursiveAssign <T, U extends RecursivePartial<T>> (left: T, rig
     let slot = left as unknown;
     if (slot === undefined && isObject(right)) slot = {};
 
-    if ( isObject(slot) && !isObject(right)) throw new Error("Cannot assign a non-object to an object");
-    if (!isObject(slot) &&  isObject(right)) throw new Error("Cannot assign an object to a non-object"); // Technically I think you could in non-strict mode, but I'm not going to support that.
     if (!isObject(slot) && !isObject(right)) return right as unknown as RecursiveAssign<T, U>;
+    if ( isObject(slot) && !isObject(right)) {
+        if (right === null) return slot as unknown as RecursiveAssign<T, U>;
+        throw new Error("Cannot assign a non-object to an object; " + JSON.stringify(left) + "; " + JSON.stringify(right));
+    }
+    // if (!isObject(slot) &&  isObject(right)) throw new Error("Cannot assign an object to a non-object"); // Technically I think you could in non-strict mode, but I'm not going to support that.
 
     // This might throw in strict mode if slot isn't an object, but we aren't using strict mode.
     for (const key of Object.keys(right)) {

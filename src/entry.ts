@@ -1,3 +1,4 @@
+import { setupUserInterface } from "./util/setupUserInterface";
 import { Session } from "./Session";
 import { User } from "./User";
 
@@ -14,6 +15,7 @@ const DEV = {
 const user = new User(getUserId(), "TestAccount", DEV);
 const session = new Session(user);
 
+setupUserInterface(session);
 session.game.start();
 
 setInterval(() => {

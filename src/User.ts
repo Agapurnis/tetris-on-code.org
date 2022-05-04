@@ -45,4 +45,18 @@ export class User {
         this.config = recursiveAssign(DEFAULT_USER_CONFIG, config);
         this.theme = this.config.themes.list[this.config.themes.active];
     }
+
+    // #region serde
+    public serialize () {
+        return {
+            id: this.id,
+            name: this.name,
+            config: this.config,
+        };
+    }
+
+    public static deserialize (data: ReturnType<User["serialize"]>) {
+        return new User(data.id, data.name, data.config);
+    }
+    // #endregion serde
 }

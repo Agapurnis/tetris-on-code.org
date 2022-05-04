@@ -33,4 +33,20 @@ export class Bag {
     
         return type;
     }
+
+    // #region serde
+    public serialize () {
+        return {
+            a: this._a,
+            b: this._b,
+        };
+    }
+
+    public static deserialize (data: ReturnType<Bag["serialize"]>) {
+        const bag = new Bag();
+        bag._a = data.a;
+        bag._b = data.b;
+        return bag;
+    }
+    // #endregion serde
 }

@@ -1,5 +1,5 @@
-import type { Session } from "../Session";
-import { prettyifyJson } from "../util/prettifyJson";
+import { Session } from "../Session";
+import { recursiveAssign } from "../util/recursiveAssign";
 
 export function setupOptionsPage (session: Session) {
     onEvent("options-ret-btn", "click", () => {
@@ -7,7 +7,11 @@ export function setupOptionsPage (session: Session) {
     });
 
     onEvent("options-export", "click", () => {
-        const data = prettyifyJson(JSON.stringify(session.serialize()));
+        const data = JSON.stringify(session.serialize());
         setText("options-savedata", data);
+    });
+
+    onEvent("options-import", "click", () => {
+        recursiveAssign(session, Session.deserialize(JSON.parse(getText("options-savedata")) as ReturnType<Session["serialize"]>));
     });
 }

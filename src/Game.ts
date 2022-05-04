@@ -41,9 +41,9 @@ export class Game {
         public board: GameBoard = twoDimensionalArray(size[1][0], size[0][0], null)
     ) {} 
 
-    private ended = false;
+    public ended = false;
     public paused = true;
-    public readonly bag = new Bag();
+    public bag = new Bag();
     public inputs = new InputManager(this, InputManager.DEFAULT_MAPPINGS);
     public timer: [number, number] = [0, 0];
     public score: ScoreRecord = EMPTY_SCORE_RECORD;
@@ -214,5 +214,30 @@ export class Game {
                 }
             });
         });
+    }
+
+    // #region serde
+    public serialize () {
+        return {
+            bag: this.bag.serialize(),
+            size: this.size,
+            score: this.score,
+            board: this.board.map((row) => row.map((pixel) => pixel ? [pixel.state, pixel.tetrimino] as const : null)),
+            active: this.active ? this.active.serialize() : null,
+            held: this.held ? this.held.serialize() : null,
+
+            state: [this.paused, this.ended]
+        };
+    }
+
+    public static deserialize (data: ReturnType<Game["serialize"]>) {
+        const game = new Game(null!, data.size, data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0]) : null)));
+        game.bag = Bag.deserialize(data.bag);
+        game.paused = data.state[0];
+        game.ended = data.state[1];
+        game.score = data.score;
+        game.active = data.active ? Tetrimino.deserialize(game, data.active) : null;
+        game.held = data.held ? Tetrimino.deserialize(game, data.held) : null;
+        return game;
     }
 }

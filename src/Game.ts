@@ -2,9 +2,10 @@
 import type { Session } from "./Session";
 import { InputManager } from "./InputManager";
 import { twoDimensionalArray } from "./util/twoDimensionalArray";
-import { Tetrimino } from "./Tetrimino";
-import { Pixel } from "./Pixel";
+import { Tetrimino, TetriminoState } from "./Tetrimino";
+import { Pixel, PixelState } from "./Pixel";
 import { Bag } from "./Bag";
+import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./util/sizes";
 
 interface ScoreRecord {
     points: number,
@@ -43,7 +44,6 @@ export class Game {
     private ended = false;
     public paused = true;
     public readonly bag = new Bag();
-    public tetriminos: Tetrimino[] = [];
     public inputs = new InputManager(this, InputManager.DEFAULT_MAPPINGS);
     public timer: [number, number] = [0, 0];
     public score: ScoreRecord = EMPTY_SCORE_RECORD;
@@ -100,7 +100,7 @@ export class Game {
         }
 
         if (!this.active.move([0, 1])) {
-            this.clear();
+            this.process();
         }
 
         this.active?.moveCanvas();
@@ -162,40 +162,6 @@ export class Game {
             b.unshift(array as BoardElement[]);
         }
 
-        // Adjust the pixels of the tetriminos that had an intersection of their pixels with the cleared lines.
-        // The weird code below is just retrieving the values as an array, since we can't use `Object.values`
-        Object.keys(adjusted).map((key) => adjusted[key]).forEach((tetrimino) => {
-            // Starting at the row relative to the tetrimino and not the whole board,
-            // remove n lines, where n is the number of lines cleared for the board.
-            console.log(tetrimino.y, start, cleared);
-            tetrimino.pixels.splice(tetrimino.y - start!, cleared);
-
-            // Replace the deleted rows with empty ones starting from the top,
-            // which will shift everything down and ensure constant length.
-            for (let i = 0; i < cleared; i++) {
-                // Create an array of the length of the pixel row and fill it with null.
-                const array = new Array(tetrimino.pixels.length);
-                for (let j = 0; j < array.length; j++) { array[j] = null; }
-
-                // Add the new empty row to the top of the tetrimino pixels to
-                // shift everything downwards and maintain constant length.
-                tetrimino.pixels.unshift(array as BoardElement[]);
-            }
-        });
-
-        // Update every tetrimino by placing their inner pixels on the board once again,
-        // and updating their height if they were above the area of the cleared lines.
-        this.tetriminos.forEach((tetrimino) => {
-            // We don't do anything to the active piece as it can cause issues.
-            if (tetrimino.active) return;
-            
-            // Move tetriminos above the cleared lines.
-            // If the tetriminos below or at that level, this would cause them to be moved off-screen, which isn't smart.
-            if (tetrimino.y  < start! && !adjusted[tetrimino.id]) {
-                tetrimino.y += cleared;
-            }
-        });
-
         // Set new board state.
         this.board = b;
 
@@ -206,7 +172,7 @@ export class Game {
     /**
       * Miscellaneous functionality that should be run after a piece is dropped.
       */
-    private clear () {
+    private process () {
         if (this.ended) return;
         if (this.paused) return;
         if (!this.active) {
@@ -214,12 +180,14 @@ export class Game {
         }
 
         this.active.solidify();
-        // Pick a new tetrimino
+        this.active.draw();
         this.active = Tetrimino.ofTypeForGame(this.bag.pick(), this);
-        this.active?.draw();
 
         if (!this.active) {
             throw new Error("Game over!");
+        } else {
+            this.active.clear();
+            this.active.draw();
         }
 
         // TODO: Check for combos.
@@ -230,18 +198,40 @@ export class Game {
         this.score.lines  += cleared; 
         
         if (cleared !== 0) {
+            this.clear();
             this.draw();
             // TODO
         }
     }
 
-    public draw () {
+    public clear () {
         setActiveCanvas("solid");
         clearCanvas();
-        
+    }
+
+    public draw () {     
         this.active?.clear();
-        this.tetriminos.forEach((tetrimino) => {
-            tetrimino.draw();
+        this.active?.draw();
+
+        setActiveCanvas("solid");
+        setFillColor("#bababa");
+
+        // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
+        const sizeX = ALLOCATED_WIDTH  / this.size[1][1];
+        const sizeY = ALLOCATED_HEIGHT / this.size[0][1];
+        
+        this.board.forEach((row, y) => {
+            row.forEach((pixel, x) => {
+                if (pixel) {
+                    setFillColor(pixel.color[TetriminoState.SOLID]);
+                    rect(
+                        (x - (this.size[1][0] - this.size[1][1])) * sizeX,
+                        (y - (this.size[0][0] - this.size[0][1])) * sizeY,
+                        sizeX,
+                        sizeY
+                    );
+                }
+            });
         });
     }
 }

@@ -87,7 +87,6 @@ export class Tetrimino {
         public state: TetriminoState,
         public readonly type: TetriminoType,
     ) {
-        this.game.tetriminos = this.game.tetriminos.concat([this]);
         this.active = true;
         this.pixels = TETRIMINO_PIXEL_STATES[this.type]
             // Convert all pixel states to actual pixels for this tetrimino with correct positioning.
@@ -95,17 +94,10 @@ export class Tetrimino {
 
         const id = (+Date.now()).toString();
         this.id = id;
-        this.canvas = id;
-
-        createCanvas(this.canvas,
-            (300 / this.game.size[1][1]) * 4,
-            (450 / this.game.size[0][1]) * 4,
-        );
     }
         
     public pixels: (Pixel | null)[][];
     public facing = Facing.NORTH;
-    public canvas: string;
     public active = false;
     public held   = false;
     public id: string;
@@ -178,6 +170,7 @@ export class Tetrimino {
       * @remarks does not mark as inactive
       */
     public solidify () {
+        this.active = false;
         this.state = TetriminoState.SOLID;
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
@@ -190,11 +183,6 @@ export class Tetrimino {
                 }
             });
         });
-
-        const oid = this.canvas;
-        this.active = false;
-        this.draw();
-        deleteElement(oid);
     }
 
     public rotate (rotation: Rotation, direction: Direction): boolean {
@@ -272,7 +260,7 @@ export class Tetrimino {
                         console.log(`Rotated (super) in ${+Date.now() - t}ms`);
                     }
 
-                    setActiveCanvas(this.canvas);
+                    setActiveCanvas("falling");
                     clearCanvas();
 
                     return true;
@@ -303,7 +291,7 @@ export class Tetrimino {
       *   - Whether or not it has solidified
       */
     public draw () {
-        setActiveCanvas(this.active ? this.canvas : "solid");
+        setActiveCanvas(this.active ? "falling" : "solid");
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
@@ -327,7 +315,7 @@ export class Tetrimino {
     }
 
     public clear () {
-        setActiveCanvas(this.canvas);
+        setActiveCanvas("falling");
         clearCanvas();
     }
 
@@ -335,17 +323,10 @@ export class Tetrimino {
         const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
         const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
         
-        // let dirty = false;
-        // const tOffset = TETRIMINO_PIXEL_STATES[this.type].filter((row) => row.every((pixel) => pixel === PixelState.VOID)).length;
-        const sOffset = [
-            this.game.size[1][0] - this.game.size[1][1],
-            this.game.size[0][0] - this.game.size[0][1],
-        ];
-        
         setPosition(
-            this.canvas,
-            (this.x - sOffset[0]) * sizeX,
-            (this.y - sOffset[1]) * sizeY,
+            "falling",
+            (this.x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
+            (this.y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
         );
     }
 

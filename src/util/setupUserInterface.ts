@@ -25,5 +25,8 @@ export function setupUserInterface (session: Session) {
     setStyle("lines", "z-index: -25");
     setStyle("game-background", "z-index: -30");
     createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);
-
+    createCanvas("falling",
+        (300 / session.game.size[1][1]) * 4,
+        (450 / session.game.size[0][1]) * 4,
+    );
 }

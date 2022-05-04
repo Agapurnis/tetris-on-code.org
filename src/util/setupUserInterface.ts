@@ -1,6 +1,9 @@
 import type { Session } from "../Session";
 import type { Game } from "../Game";
 import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./sizes";
+import { setupSettingsPage } from "../ui/settings";
+import { setupOptionsPage } from "../ui/options";
+import { setupGamePage } from "../ui/game";
 
 function drawLines (game: Game) {
     const sizeX = ALLOCATED_WIDTH /  game.size[1][1];
@@ -29,4 +32,8 @@ export function setupUserInterface (session: Session) {
         (300 / session.game.size[1][1]) * 4,
         (450 / session.game.size[0][1]) * 4,
     );
+
+    setupSettingsPage(session);
+    setupOptionsPage(session);
+    setupGamePage(session);
 }

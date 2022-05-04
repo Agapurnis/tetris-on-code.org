@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { Session } from "./Session";
+import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./util/sizes";
 import { InputManager } from "./InputManager";
 import { twoDimensionalArray } from "./util/twoDimensionalArray";
 import { Tetrimino, TetriminoState } from "./Tetrimino";
-import { Pixel, PixelState } from "./Pixel";
+import { Pixel } from "./Pixel";
 import { Bag } from "./Bag";
-import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./util/sizes";
 
 interface ScoreRecord {
     points: number,
@@ -126,7 +126,6 @@ export class Game {
         // This creates a version of the board without full rows, while also setting `start` to the index at which it first begins removing.
         const clear = this.board.filter((row, i) => (temp = row.every((pixel) => pixel !== null), temp ? (start ??= i, !temp) : !temp));
         const cleared = this.board.length - clear.length; // Number of lines cleared.
-        const adjusted: Record<string, Tetrimino> = {};
         start ??= this.board.length;
         
         // Remove the filled rows.
@@ -138,20 +137,6 @@ export class Game {
             const array = new Array(this.size[1][0]);
 
             for (let j = 0; j < array.length; j++) {
-                // Retrieve the pixel at the given index.
-                // Note that this can be a `Pixel`, `undefined`, or `null`.
-                //
-                // `null` refers to an empty spcae
-                // `Pixel` means exactly what you think.
-                // `undefined` means we went OOB
-                const e = b[start + i]?.[j];
-
-                // If the pixel exists (not `undefined` or `null`) and is indeed solid, record this
-                // tetrimino as being "adjusted", meaning we will end up mutating it's inner pixel state to reflect this change.
-                if (e) {
-                    adjusted[e.tetrimino!.id] = e.tetrimino!;
-                }
-
                 // Replace this element of the empty-row with nothing, as although
                 // the row is 'empty', the array itself must contain some content.
                 array[j] = null;
@@ -185,9 +170,6 @@ export class Game {
 
         if (!this.active) {
             throw new Error("Game over!");
-        } else {
-            this.active.clear();
-            this.active.draw();
         }
 
         // TODO: Check for combos.
@@ -202,6 +184,9 @@ export class Game {
             this.draw();
             // TODO
         }
+
+        this.active.clear();
+        this.active.draw();
     }
 
     public clear () {
@@ -210,11 +195,7 @@ export class Game {
     }
 
     public draw () {     
-        this.active?.clear();
-        this.active?.draw();
-
         setActiveCanvas("solid");
-        setFillColor("#bababa");
 
         // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
         const sizeX = ALLOCATED_WIDTH  / this.size[1][1];
@@ -223,7 +204,7 @@ export class Game {
         this.board.forEach((row, y) => {
             row.forEach((pixel, x) => {
                 if (pixel) {
-                    setFillColor(pixel.color[TetriminoState.SOLID]);
+                    setFillColor(this.session.user.theme.tetriminos[pixel.tetrimino][TetriminoState.SOLID]);
                     rect(
                         (x - (this.size[1][0] - this.size[1][1])) * sizeX,
                         (y - (this.size[0][0] - this.size[0][1])) * sizeY,

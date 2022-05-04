@@ -10,4 +10,17 @@ export class Session {
     }
 
     public game = new Game(this);
+
+    // #region serde
+    public serialize () {
+        return {
+            user: this.user,
+            game: {
+                board: this.game.board,
+            }
+        };
+    }
+
+    // #endregion serde
+    
 }

@@ -29,13 +29,13 @@ export function setupUserInterface (session: Session) {
     setStyle("game-background", "z-index: -30");
     createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);  
     createCanvas("ghost",
-        (300 / session.game.size[1][1]) * 4,
-        (450 / session.game.size[0][1]) * 4,
+        (ALLOCATED_WIDTH / session.game.size[1][1]) * 4,
+        (ALLOCATED_HEIGHT / session.game.size[0][1]) * 4,
     );
 
     createCanvas("falling",
-        (300 / session.game.size[1][1]) * 4,
-        (450 / session.game.size[0][1]) * 4,
+        (ALLOCATED_WIDTH / session.game.size[1][1]) * 4,
+        (ALLOCATED_HEIGHT / session.game.size[0][1]) * 4,
     );
 
     setupDetailsPage(session);

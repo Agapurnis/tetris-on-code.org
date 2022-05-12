@@ -6,6 +6,7 @@ import { recursiveAssign } from "./util/recursiveAssign";
 interface DeveloperConfig {
     logging: {
         tick: boolean,
+        zenith: boolean,
         rotate: boolean,
     }
 }
@@ -26,6 +27,7 @@ const DEFAULT_USER_CONFIG: UserConfig = {
     developer: {
         logging: {
             tick: false,
+            zenith: false,
             rotate: false,
         }
     }

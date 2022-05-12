@@ -414,6 +414,9 @@ export class Tetrimino {
         // Save our current position to revert
         const stasis = this.y;
 
+        // Save a timestamp for performance logging and analysis
+        const timestamp = +Date.now();
+
         // Drop until we can no longer move downwards.
         while (this.move([0, +1])) { /* NOOP */ }
 
@@ -426,6 +429,11 @@ export class Tetrimino {
         // Cache and memoize the zenith result, indiciating it is ready.
         this.zenithMemoValid = true;
         this.zenithMemo = zenith;
+
+        // Log how long it took to calculate the zenith
+        if (this.game.session.user.config.developer.logging.zenith) {
+            console.log(`Zenith calculated in ${+Date.now() - timestamp}ms`);
+        }
 
         // Return the zenith
         return zenith;

@@ -320,7 +320,6 @@ export class Tetrimino {
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
                 if (shouldDrawRelative ? pixel : pixel && pixel.solid) {
-                    console.log(this.held, (shouldDrawRelative ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX);
                     rect(
                         (shouldDrawRelative ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
                         (shouldDrawRelative ? y : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,

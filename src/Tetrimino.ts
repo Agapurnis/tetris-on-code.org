@@ -299,7 +299,7 @@ export class Tetrimino {
     }
 
     /**
-      * Draws the tetrimino. If this piece is falling, it *should only be called once unless a rotation is preformed*.
+      * Draws the tetrimino and it's ghost. If this piece is falling, it *should only be called once unless a rotation is preformed*.
       * Note that the visual appearance of the tetrimino is deterministic on the state, notably the following:
       *   - Type of tetrimino
       *   - User configuration

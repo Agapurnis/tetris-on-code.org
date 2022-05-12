@@ -1,5 +1,8 @@
 {
-    "include": ["./src/**/*.ts"],
+    "include": [
+        "./src/**/*.ts",
+        "./types/**/*.d.ts"
+    ],
     "compilerOptions": {
         "target": "ES3",
         "noEmit": true,

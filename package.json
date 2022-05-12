@@ -6,6 +6,7 @@
     "@types/eslint": "^8.4.1",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.13.0",
     "husky": "^7.0.4",
     "lint-staged": "^12.3.7",
@@ -19,7 +20,8 @@
   "version": "0.0.0",
   "main": "out/bundle.js",
   "scripts": {
-    "build": "rollup -c",
+    "build": "npx cross-env NODE_ENV=PRODUCTION  npx rollup -c",
+    "watch": "npx cross-env NODE_ENV=DEVELOPMENT npx rollup -c --watch",
     "lint": "npx eslint src/",
     "lint:staged": "npx lint-staged -c ./lint-staged.config.json"
   },

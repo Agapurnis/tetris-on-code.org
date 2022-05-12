@@ -14,7 +14,7 @@ const license = `/**
 const output = {
     comments (_, comment) {
         if (comment.type == "comment2") {
-          return /\*!|@preserve|@license|@cc_on|Copyright|\(c\)|©/i.test(comment.value);
+          return /\*!|@preserve|@license|@cc_on|copyright|\(c\)|©/i.test(comment.value);
         }
     }
 }

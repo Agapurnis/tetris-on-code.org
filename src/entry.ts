@@ -7,7 +7,3 @@ const session = new Session(user);
 
 setupUserInterface(session);
 session.game.start();
-
-setInterval(() => {
-    // console.log(session.game.active?.x, session.game.active?.y);
-}, 100);

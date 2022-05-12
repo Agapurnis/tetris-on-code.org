@@ -216,7 +216,7 @@ export class Game {
         });
     }
 
-    // #region serde
+    // #region serde, mut
     public serialize () {
         return {
             bag: this.bag.serialize(),
@@ -230,8 +230,21 @@ export class Game {
         };
     }
 
+    public update (data: ReturnType<Game["serialize"]>) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.size = data.size;
+        this.board = data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0], true) : null));
+        this.bag = Bag.deserialize(data.bag);
+        this.paused = data.state[0];
+        this.ended = data.state[1];
+        this.score = data.score;
+        this.active = data.active ? Tetrimino.deserialize(this, data.active) : null;
+        this.held = data.held ? Tetrimino.deserialize(this, data.held) : null;
+    } 
+
     public static deserialize (data: ReturnType<Game["serialize"]>) {
-        const game = new Game(null!, data.size, data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0]) : null)));
+        const game = new Game(null!, data.size, data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0], true) : null)));
         game.bag = Bag.deserialize(data.bag);
         game.paused = data.state[0];
         game.ended = data.state[1];
@@ -240,4 +253,5 @@ export class Game {
         game.held = data.held ? Tetrimino.deserialize(game, data.held) : null;
         return game;
     }
+    // #endregion serde, mut
 }

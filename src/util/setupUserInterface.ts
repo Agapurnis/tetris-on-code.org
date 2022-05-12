@@ -1,7 +1,7 @@
 import type { Session } from "../Session";
 import type { Game } from "../Game";
 import { ALLOCATED_HEIGHT, ALLOCATED_WIDTH } from "./sizes";
-import { setupSettingsPage } from "../ui/settings";
+import { setupDetailsPage } from "../ui/details";
 import { setupOptionsPage } from "../ui/options";
 import { setupGamePage } from "../ui/game";
 
@@ -33,7 +33,7 @@ export function setupUserInterface (session: Session) {
         (450 / session.game.size[0][1]) * 4,
     );
 
-    setupSettingsPage(session);
+    setupDetailsPage(session);
     setupOptionsPage(session);
     setupGamePage(session);
 }

@@ -12,6 +12,6 @@ export function setupOptionsPage (session: Session) {
     });
 
     onEvent("options-import", "click", () => {
-        recursiveAssign(session, Session.deserialize(JSON.parse(getText("options-savedata")) as ReturnType<Session["serialize"]>));
+        session.update(recursiveAssign(session.serialize(), JSON.parse(getText("options-savedata").replace(/\n/g, "")) as ReturnType<Session["serialize"]>));
     });
 }

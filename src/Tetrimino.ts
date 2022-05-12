@@ -345,9 +345,9 @@ export class Tetrimino {
 
     public static deserialize (game: Game, data: ReturnType<Tetrimino["serialize"]>) {
         const tetrimino = new Tetrimino(data[4][0], data[4][1], game, data[2], data[0]);
-        tetrimino.held = data[1][0];
-        tetrimino.active = data[1][1];
         tetrimino.facing = data[3];
+        tetrimino.active = data[1][0];
+        tetrimino.held = data[1][1];
         return tetrimino;
     }
     // #endregion serde

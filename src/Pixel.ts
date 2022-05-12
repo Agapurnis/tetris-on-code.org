@@ -11,9 +11,9 @@ export class Pixel {
         public coordinates: [number, number],
         public tetrimino: TetriminoType,
         public state: TetriminoState,
+        public solid = false,
     ) {}
 
-    // #region Static Constructors
     /** @returns null for empty */
     public static forTetrimino (
         tetrimino: Tetrimino,
@@ -26,8 +26,4 @@ export class Pixel {
             tetrimino.state,
         ) : null;
     }
-
-    // #endregion Static Constructors
-    public solid = false;
-
 }

@@ -46,7 +46,7 @@ export class User {
         this.theme = this.config.themes.list[this.config.themes.active];
     }
 
-    // #region serde
+    // #region serde, mut
     public serialize () {
         return {
             id: this.id,
@@ -55,8 +55,14 @@ export class User {
         };
     }
 
+    public update (data: ReturnType<User["serialize"]>) {
+        this.id = data.id,
+        this.name = data.name;
+        this.config = data.config;
+    } 
+
     public static deserialize (data: ReturnType<User["serialize"]>) {
         return new User(data.id, data.name, data.config);
     }
-    // #endregion serde
+    // #endregion serde, mut
 }

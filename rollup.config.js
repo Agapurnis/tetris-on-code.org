@@ -18,6 +18,10 @@ const output = {
     }
 }
 
+const PROD_PLUGINS = [ terser({ output, mangle: false, compress: true }) ]
+const  DEV_PLUGINS = []
+
+
 /** @type {import("rollup").RollupOptions} */
 export default {
     input: "./src/entry.ts",
@@ -30,10 +34,7 @@ export default {
     plugins: [
         typescript(),
         eslint({ throwOnError: true }),
-        // terser({
-        //     output,
-        //     mangle: false,
-        //     compress: true,
-        // }),
+        ...(process.env.NODE_ENV.toLowerCase() === "production"  ? PROD_PLUGINS : []),
+        ...(process.env.NODE_ENV.toLowerCase() === "development" ? DEV_PLUGINS  : []),
     ]
 }

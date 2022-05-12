@@ -123,6 +123,9 @@ export class Tetrimino {
     /**
       * Attempts to move the tetrimino with the specified relative offset.
       * @returns true if the tetrimino was moved (it is a valid non-intersection), false otherwise
+      * @remarks
+      *  - Reverts upon collision
+      *  - Invalidates zenith if horizontal movement occured
       */
     public move (adjustment: [number, number]){
         // Create a copy of the current position so that we can rollback if it is invalid
@@ -160,8 +163,10 @@ export class Tetrimino {
             }
         }
 
-        // Now that we know this move is valid,
-        // we can return without needing to rollback.
+        // Invalid zenith if the tetrimino moved horizontally
+        if (adjustment[0] !== 0) this.zenithMemoValid = false;
+
+        // Indicate success without rollback
         return true;
     }
 
@@ -185,6 +190,15 @@ export class Tetrimino {
         });
     }
 
+    /**
+     * 
+     * @param rotation The type of rotation (basic or super)
+     * @param direction The direcion to rotate in (clockwise or counterclockwise)
+     * @returns whether or not the rotation succeeded
+     * @remarks
+     *  - Reverts if the rotation is invalid.
+     *  - Marks zenith memo as invalidated upon successful rotation.
+     */
     public rotate (rotation: Rotation, direction: Direction): boolean {
         const t = +Date.now();
 
@@ -213,6 +227,8 @@ export class Tetrimino {
                 console.log(`Rotated (simple) in ${+Date.now() - t}ms`);
             }
         
+            this.zenithMemoValid = false;
+
             return true;
         }
 
@@ -259,6 +275,8 @@ export class Tetrimino {
                     if (this.game.session.user.config.developer.logging.rotate) {
                         console.log(`Rotated (super) in ${+Date.now() - t}ms`);
                     }
+
+                    this.zenithMemoValid = false;
 
                     return true;
                 } else {
@@ -379,6 +397,9 @@ export class Tetrimino {
         this.moveCanvas();
     }
 
+    private zenithMemoValid = false;
+    private zenithMemo!: number;
+
     /**
      * @returns the highest safe point this tetrimino can be dropped, that point being the `y` of the tetrimino if it were dropped to that position
      * 
@@ -387,6 +408,9 @@ export class Tetrimino {
      *  - TODO: Memoize the function.
      */
     public zenith () {
+        // If it is still valid, return the cached version.
+        if (this.zenithMemoValid) return this.zenithMemo;
+
         // Save our current position to revert
         const stasis = this.y;
 
@@ -398,6 +422,10 @@ export class Tetrimino {
 
         // Revert our movement
         this.y = stasis;
+
+        // Cache and memoize the zenith result, indiciating it is ready.
+        this.zenithMemoValid = true;
+        this.zenithMemo = zenith;
 
         // Return the zenith
         return zenith;

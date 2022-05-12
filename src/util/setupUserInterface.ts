@@ -27,13 +27,13 @@ export function setupUserInterface (session: Session) {
     drawLines(session.game);
     setStyle("lines", "z-index: -25");
     setStyle("game-background", "z-index: -30");
-    createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);
-    createCanvas("falling",
+    createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);  
+    createCanvas("ghost",
         (300 / session.game.size[1][1]) * 4,
         (450 / session.game.size[0][1]) * 4,
     );
-    
-    createCanvas("ghost",
+
+    createCanvas("falling",
         (300 / session.game.size[1][1]) * 4,
         (450 / session.game.size[0][1]) * 4,
     );

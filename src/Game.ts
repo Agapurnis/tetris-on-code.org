@@ -236,14 +236,33 @@ export class Game {
         // Prevent swapping again until after the next piece-drop.
         this.swapped = true;
 
-        // Put our active piece into a variable for usage after it is replaced.
+        // Put our active and held pieces into variables for usage after they are replaced.
         const active = this.active;
+        const held = this.held;
 
         // Put the held piece into the active slot.
-        this.active = this.held ?? Tetrimino.ofTypeForGame(this.bag.pick(), this);
+        this.active = held ?? Tetrimino.ofTypeForGame(this.bag.pick(), this);
         if (!this.active) return false;
         this.active.held = false;
         this.active.active = true;
+
+        // Set the position of this piece to the position of the (previously) active piece.
+        this.active.x = active!.x;
+        this.active.y = active!.y;
+
+        // Check for collisions.
+        if (!this.active.move([0, 0])) {
+            // If there are collisions, put the active piece back into the held slot.
+            this.held = this.active;
+            this.held.held = true;
+            this.held.active = false;
+            // Put our previously-active piece back into the active slot.
+            this.active = active;
+            // We will set `this.swapped` to be false, as we want to allow the user to swap again despite this.
+            this.swapped = false;
+            // Return false, as the swap was not performed.
+            return false;
+        }
 
         // Put the (previously) active piece into the held slot.
         this.held = active;

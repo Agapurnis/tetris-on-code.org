@@ -273,6 +273,8 @@ export class Game {
         // Draw the new active piece newly held piece.
         this.held.clear();
         this.held.draw();
+        this.active.invalidateZenithMemo();
+        this.active.moveCanvas();
         this.active.clear();
         this.active.draw();
         

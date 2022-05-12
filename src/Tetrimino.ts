@@ -164,7 +164,7 @@ export class Tetrimino {
         }
 
         // Invalid zenith if the tetrimino moved horizontally
-        if (adjustment[0] !== 0) this.zenithMemoValid = false;
+        if (adjustment[0] !== 0) this.invalidateZenithMemo();
 
         // Indicate success without rollback
         return true;
@@ -227,7 +227,7 @@ export class Tetrimino {
                 console.log(`Rotated (simple) in ${+Date.now() - t}ms`);
             }
         
-            this.zenithMemoValid = false;
+            this.invalidateZenithMemo();
 
             return true;
         }
@@ -276,7 +276,7 @@ export class Tetrimino {
                         console.log(`Rotated (super) in ${+Date.now() - t}ms`);
                     }
 
-                    this.zenithMemoValid = false;
+                    this.invalidateZenithMemo();
 
                     return true;
                 } else {
@@ -299,7 +299,7 @@ export class Tetrimino {
     }
 
     /**
-      * Draws the tetrimino and it's ghost. If this piece is falling, it *should only be called once unless a rotation is preformed*.
+      * Draws the tetrimino and it's ghost. If this piece is falling, it should only be called when necessary.
       * Note that the visual appearance of the tetrimino is deterministic on the state, notably the following:
       *   - Type of tetrimino
       *   - User configuration
@@ -330,6 +330,8 @@ export class Tetrimino {
             });
         });
 
+        if (!this.active) return;
+
         setActiveCanvas("ghost");
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type]["GHOST"]);
@@ -353,10 +355,15 @@ export class Tetrimino {
      * Clears the active tetrimino's canvas alongside it's ghost's.
      */
     public clear () {
-        setActiveCanvas(this.active ? "falling" : "held");
-        clearCanvas();
-        setActiveCanvas("ghost");
-        clearCanvas();
+        if (this.active) {
+            setActiveCanvas("falling");
+            clearCanvas();
+            setActiveCanvas("ghost");
+            clearCanvas();
+        } else {
+            setActiveCanvas("held");
+            clearCanvas();
+        }
     }
 
     /**
@@ -382,6 +389,7 @@ export class Tetrimino {
 
     public hardDrop () {
         const depth = this.zenith() - this.y;
+        console.log(depth);
         while (this.move([0, depth])) { 
             // NOOP - Self terminating movement loop.
         }
@@ -391,6 +399,10 @@ export class Tetrimino {
 
     private zenithMemoValid = false;
     private zenithMemo!: number;
+
+    public invalidateZenithMemo () {
+        this.zenithMemoValid = false;
+    }   
 
     /**
      * @returns the highest safe point this tetrimino can be dropped, that point being the `y` of the tetrimino if it were dropped to that position

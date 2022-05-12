@@ -389,7 +389,6 @@ export class Tetrimino {
 
     public hardDrop () {
         const depth = this.zenith() - this.y;
-        console.log(depth);
         while (this.move([0, depth])) { 
             // NOOP - Self terminating movement loop.
         }

@@ -260,9 +260,6 @@ export class Tetrimino {
                         console.log(`Rotated (super) in ${+Date.now() - t}ms`);
                     }
 
-                    setActiveCanvas("falling");
-                    clearCanvas();
-
                     return true;
                 } else {
                     this.pixels = stasis[0];
@@ -314,6 +311,36 @@ export class Tetrimino {
         });
     }
 
+    /** draw the preview, or "ghost" */
+    public drawGhost () {
+        setActiveCanvas("ghost");
+        setStrokeColor("#000000");
+        setFillColor(this.game.session.user.theme.tetriminos[this.type]["GHOST"]);
+
+        // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
+        const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
+        const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
+
+        // Draw the tetrimino
+        this.pixels.forEach((row, y) => {
+            row.forEach((pixel, x) => {
+                if (pixel) {
+                    rect(
+                        x * sizeX,
+                        y * sizeY,
+                        sizeX,
+                        sizeY,
+                    );
+                }
+            });
+        });
+    }
+
+    public clearGhost () {
+        setActiveCanvas("ghost");
+        clearCanvas();
+    }
+
     public clear () {
         setActiveCanvas("falling");
         clearCanvas();
@@ -330,12 +357,50 @@ export class Tetrimino {
         );
     }
 
+    public moveGhost () {
+        const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
+        const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
+        const zenith = this.zenith();
+
+        setPosition(
+            "ghost",
+            (this.x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
+            (zenith - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
+        );
+    }
+
+
     public hardDrop () {
-        while (this.move([0, +1])) { 
+        const depth = this.zenith() - this.y;
+        while (this.move([0, depth])) { 
             // NOOP - Self terminating movement loop.
         }
         
         this.moveCanvas();
+    }
+
+    /**
+     * @returns the highest safe point this tetrimino can be dropped, that point being the `y` of the tetrimino if it were dropped to that position
+     * 
+     * @remarks
+     *  - TODO: This is very ineffecient.
+     *  - TODO: Memoize the function.
+     */
+    public zenith () {
+        // Save our current position to revert
+        const stasis = this.y;
+
+        // Drop until we can no longer move downwards.
+        while (this.move([0, +1])) { /* NOOP */ }
+
+        // Save our zenith to return after we revert our position
+        const zenith = this.y;
+
+        // Revert our movement
+        this.y = stasis;
+
+        // Return the zenith
+        return zenith;
     }
 
     // #region serde

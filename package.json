@@ -18,7 +18,7 @@
   },
   "name": "tetris-on-code-dot-org",
   "description": "A terrifying Tetris implementation written for usage on [code.org](https://code.org/)",
-  "version": "0.0.0",
+  "version": "0.5.0",
   "main": "out/bundle.js",
   "scripts": {
     "build": "npx cross-env NODE_ENV=PRODUCTION  npx rollup -c",

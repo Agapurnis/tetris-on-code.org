@@ -4,7 +4,6 @@ import { DEFAULT_COLOR_THEME } from "./Color";
 import { recursiveAssign } from "./util/recursiveAssign";
 
 interface DeveloperConfig {
-    draw: boolean,
     logging: {
         tick: boolean,
         rotate: boolean,
@@ -25,7 +24,6 @@ const DEFAULT_USER_CONFIG: UserConfig = {
         active: 0
     },
     developer: {
-        draw: false,
         logging: {
             tick: false,
             rotate: false,

@@ -4,7 +4,6 @@ import { User } from "./User";
 
 const DEV = {
     developer: {
-        draw: true,
         logging: {
             tick: false,
             rotate: false,

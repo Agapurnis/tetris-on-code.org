@@ -34,9 +34,9 @@ export function setupUserInterface (session: Session) {
     drawLines(session.game);
     setStyle("lines", "z-index: -25");
     setStyle("game-background", "z-index: -30");
-    createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);  
-    createPieceDisplayCanvas(session, "ghost");
+    createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);
     createPieceDisplayCanvas(session, "falling");
+    createPieceDisplayCanvas(session, "ghost");
     setupDetailsPage(session);
     setupOptionsPage(session);
     setupGamePage(session);

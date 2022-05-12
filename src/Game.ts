@@ -60,8 +60,6 @@ export class Game {
       *  - The game is paused by default.
       *  - Input listening only begins after this start of the game.
       *  - An initial random tetrimino is chosen from the bag.
-      * 
-      * 
       */
     public start (ms = /* 400 */ 200): void {
         this.inputs.listen();

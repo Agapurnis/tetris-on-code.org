@@ -304,6 +304,7 @@ export class Tetrimino {
       *   - Type of tetrimino
       *   - User configuration
       *   - Whether or not it has solidified
+      *   - Whether or not is is being held
       */
     public draw () {
         setActiveCanvas(this.active ? "falling" : "solid");

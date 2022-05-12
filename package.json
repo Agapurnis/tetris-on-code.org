@@ -22,7 +22,7 @@
   "main": "out/bundle.js",
   "scripts": {
     "build": "npx cross-env NODE_ENV=PRODUCTION  npx rollup -c",
-    "watch": "npx cross-env NODE_ENV=DEVELOPMENT npx rollup -c --watch",
+    "watch": "npx cross-env NODE_ENV=DEVELOPMENT npx rollup -cw",
     "lint": "npx eslint src/",
     "lint:staged": "npx lint-staged -c ./lint-staged.config.json"
   },

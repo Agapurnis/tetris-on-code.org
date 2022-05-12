@@ -23,21 +23,20 @@ function drawLines (game: Game) {
     }
 }
 
+function createPieceDisplayCanvas (session: Session, id: string) {
+    createCanvas(id,
+        (ALLOCATED_WIDTH / session.game.size[1][1]) * 4,
+        (ALLOCATED_HEIGHT / session.game.size[0][1]) * 4,
+    );
+}
+
 export function setupUserInterface (session: Session) {
     drawLines(session.game);
     setStyle("lines", "z-index: -25");
     setStyle("game-background", "z-index: -30");
     createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);  
-    createCanvas("ghost",
-        (ALLOCATED_WIDTH / session.game.size[1][1]) * 4,
-        (ALLOCATED_HEIGHT / session.game.size[0][1]) * 4,
-    );
-
-    createCanvas("falling",
-        (ALLOCATED_WIDTH / session.game.size[1][1]) * 4,
-        (ALLOCATED_HEIGHT / session.game.size[0][1]) * 4,
-    );
-
+    createPieceDisplayCanvas(session, "ghost");
+    createPieceDisplayCanvas(session, "falling");
     setupDetailsPage(session);
     setupOptionsPage(session);
     setupGamePage(session);

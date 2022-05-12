@@ -33,6 +33,7 @@ function createPieceDisplayCanvas (session: Session, id: string) {
 export function setupUserInterface (session: Session) {
     drawLines(session.game);
     setStyle("lines", "z-index: -25");
+    setStyle("held-bg", "z-index: -25");
     setStyle("game-background", "z-index: -30");
     createCanvas("solid", ALLOCATED_WIDTH, ALLOCATED_HEIGHT);
     createPieceDisplayCanvas(session, "falling");

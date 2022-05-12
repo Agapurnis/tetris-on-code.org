@@ -307,21 +307,23 @@ export class Tetrimino {
       *   - Whether or not is is being held
       */
     public draw () {
-        setActiveCanvas(this.active ? "falling" : "solid");
+        setActiveCanvas(this.active ? "falling" : this.held ? "held" : "solid");
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
         // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
         const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
         const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
+        const shouldDrawRelative = this.active || this.held;
 
         // Draw the tetrimino
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
-                if (this.active ? pixel : pixel && pixel.solid) {
+                if (shouldDrawRelative ? pixel : pixel && pixel.solid) {
+                    console.log(this.held, (shouldDrawRelative ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX);
                     rect(
-                        (this.active ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
-                        (this.active ? y : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
+                        (shouldDrawRelative ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
+                        (shouldDrawRelative ? y : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
                         sizeX,
                         sizeY,
                     );
@@ -352,7 +354,7 @@ export class Tetrimino {
      * Clears the active tetrimino's canvas alongside it's ghost's.
      */
     public clear () {
-        setActiveCanvas("falling");
+        setActiveCanvas(this.active ? "falling" : "held");
         clearCanvas();
         setActiveCanvas("ghost");
         clearCanvas();

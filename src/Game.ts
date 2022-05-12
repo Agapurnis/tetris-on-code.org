@@ -43,6 +43,10 @@ export class Game {
 
     public ended = false;
     public paused = true;
+    /**
+     * Whether or not a swap has occured in between the time since the last piece-drop.
+     */
+    public swapped = false;
     public bag = new Bag();
     public inputs = new InputManager(this, InputManager.DEFAULT_MAPPINGS);
     public timer: [number, number] = [0, 0];
@@ -162,6 +166,9 @@ export class Game {
             throw new Error("No active was found, even though it should always be filled!\nThis likely means a tick was ran after the game should have been ended, since no more spots are available.");
         }
 
+        // Allow the user to swap pieces again.
+        this.swapped = false;
+
         this.active.solidify();
         this.active.draw();
         this.active = Tetrimino.ofTypeForGame(this.bag.pick(), this);
@@ -212,6 +219,45 @@ export class Game {
                 }
             });
         });
+    }
+
+    /**
+     * @returns whether or not the swap was performed
+     * @remarks does not swap if one of the following is true:
+     *  - The game is paused.
+     *  - The game has ended.
+     *  - The user has already swapped in the time since the last piece-drop.
+     */
+    public trySwapHeld (): boolean {
+        if (this.ended) return false;
+        if (this.paused) return false;
+        if (this.swapped) return false;
+
+        // Prevent swapping again until after the next piece-drop.
+        this.swapped = true;
+
+        // Put our active piece into a variable for usage after it is replaced.
+        const active = this.active;
+
+        // Put the held piece into the active slot.
+        this.active = this.held ?? Tetrimino.ofTypeForGame(this.bag.pick(), this);
+        if (!this.active) return false;
+        this.active.held = false;
+        this.active.active = true;
+
+        // Put the (previously) active piece into the held slot.
+        this.held = active;
+        if (!this.held) return false;
+        this.held.held = true;
+        this.held.active = false;
+
+        // Draw the new active piece newly held piece.
+        this.held.clear();
+        this.held.draw();
+        this.active.clear();
+        this.active.draw();
+        
+        return true;
     }
 
     // #region serde, mut

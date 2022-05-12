@@ -32,6 +32,11 @@ export function setupUserInterface (session: Session) {
         (300 / session.game.size[1][1]) * 4,
         (450 / session.game.size[0][1]) * 4,
     );
+    
+    createCanvas("ghost",
+        (300 / session.game.size[1][1]) * 4,
+        (450 / session.game.size[0][1]) * 4,
+    );
 
     setupDetailsPage(session);
     setupOptionsPage(session);

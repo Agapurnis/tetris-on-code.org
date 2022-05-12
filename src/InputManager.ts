@@ -36,11 +36,11 @@ export class InputManager {
     public static readonly DEFAULT_MAPPINGS = [
         ["press", ["p"], (game: Game) => game.paused ? game.unpause() : game.pause()],
         ["press", [" "], (game: Game) => game.active?.hardDrop()],
-        ["press", ["a"], (game: Game) => game.active?.move([-1,  0]) && game.active?.moveCanvas()],
-        ["press", ["d"], (game: Game) => game.active?.move([+1,  0]) && game.active?.moveCanvas()],
-        ["press", ["s"], (game: Game) => game.active?.move([ 0, +1]) && game.active?.moveCanvas()],
-        ["press", ["z", "q"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.COUNTERCLOCKWISE) && game.active?.draw()],
-        ["press", ["x", "e"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.CLOCKWISE       ) && game.active?.draw()],
+        ["press", ["a"], (game: Game) => game.active?.move([-1,  0]) && (game.active?.moveCanvas(), game.active?.moveGhost())],
+        ["press", ["d"], (game: Game) => game.active?.move([+1,  0]) && (game.active?.moveCanvas(), game.active?.moveGhost())],
+        ["press", ["s"], (game: Game) => game.active?.move([ 0, +1]) && (game.active?.moveCanvas(), game.active?.moveGhost())],
+        ["press", ["z", "q"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.COUNTERCLOCKWISE) && (game.active?.clear(), game.active?.clearGhost(), game.active?.draw(), game.active?.drawGhost())],
+        ["press", ["x", "e"], (game: Game) => game.active?.rotate(Rotation.SUPER, Direction.CLOCKWISE       ) && (game.active?.clear(), game.active?.clearGhost(), game.active?.draw(), game.active?.drawGhost())],
     ] as const; // TODO
     // #endregion Static Mappings
 }

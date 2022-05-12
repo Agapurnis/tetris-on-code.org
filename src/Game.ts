@@ -104,6 +104,7 @@ export class Game {
         }
 
         this.active?.moveCanvas();
+        this.active?.moveGhost();
 
         if (this.session.user.config.developer.logging.tick) {
             console.log(`Processed tick in ${+Date.now() - t}ms.`);
@@ -165,6 +166,7 @@ export class Game {
         }
 
         this.active.solidify();
+        this.active.drawGhost();
         this.active.draw();
         this.active = Tetrimino.ofTypeForGame(this.bag.pick(), this);
 
@@ -186,6 +188,8 @@ export class Game {
         }
 
         this.active.clear();
+        this.active.clearGhost();
+        this.active.drawGhost();
         this.active.draw();
     }
 

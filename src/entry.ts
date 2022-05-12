@@ -2,16 +2,7 @@ import { setupUserInterface } from "./util/setupUserInterface";
 import { Session } from "./Session";
 import { User } from "./User";
 
-const DEV = {
-    developer: {
-        logging: {
-            tick: false,
-            rotate: false,
-        }
-    }
-};
-
-const user = new User(getUserId(), "TestAccount", DEV);
+const user = new User(getUserId(), "TestAccount");
 const session = new Session(user);
 
 setupUserInterface(session);

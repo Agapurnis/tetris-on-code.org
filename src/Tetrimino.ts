@@ -327,17 +327,10 @@ export class Tetrimino {
                 }
             });
         });
-    }
 
-    /** draw the preview, or "ghost" */
-    public drawGhost () {
         setActiveCanvas("ghost");
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type]["GHOST"]);
-
-        // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
-        const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
-        const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
 
         // Draw the tetrimino
         this.pixels.forEach((row, y) => {
@@ -354,31 +347,29 @@ export class Tetrimino {
         });
     }
 
-    public clearGhost () {
+    /**
+     * Clears the active tetrimino's canvas alongside it's ghost's.
+     */
+    public clear () {
+        setActiveCanvas("falling");
+        clearCanvas();
         setActiveCanvas("ghost");
         clearCanvas();
     }
 
-    public clear () {
-        setActiveCanvas("falling");
-        clearCanvas();
-    }
-
+    /**
+     * Moves the active tetrimino's canvas alongside it's ghost's.
+     */
     public moveCanvas () {
         const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
         const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
+        const zenith = this.zenith();
         
         setPosition(
             "falling",
             (this.x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
             (this.y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
         );
-    }
-
-    public moveGhost () {
-        const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
-        const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
-        const zenith = this.zenith();
 
         setPosition(
             "ghost",
@@ -386,7 +377,6 @@ export class Tetrimino {
             (zenith - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
         );
     }
-
 
     public hardDrop () {
         const depth = this.zenith() - this.y;

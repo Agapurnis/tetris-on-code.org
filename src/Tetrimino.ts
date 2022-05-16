@@ -144,16 +144,7 @@ export class Tetrimino {
         let absY = 0;
 
         for (let y = 0; y < len1; y++) {
-            absY = this.y + y;
-
-            // If this row is out of bounds, revert.
-            if (absY < 0 || absY >= this.game.size[0][0]) {
-                // Revert the tetrimino to its previous position
-                this.x = stasis[0];
-                this.y = stasis[1];
-                return false;
-            }
-            
+            absY = this.y + y;            
             row = this.game.board[absY];
 
             for (let x = 0; x < len2; x++) {
@@ -164,8 +155,10 @@ export class Tetrimino {
 
                     if (
                         // If this pixel is out of bounds, or the pixel is already solidifed, revert.
+                        absX < 0 || absX >= this.game.size[1][0] || 
+                        absY < 0 || absY >= this.game.size[0][0] ||
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        absX < 0 || absX >= this.game.size[1][0] || (row && row[absX] && row[absX]!.solid)
+                        (row && row[absX] && row[absX]!.solid)
                     ) {
                         // Revert the tetrimino to its previous position
                         this.x = stasis[0];

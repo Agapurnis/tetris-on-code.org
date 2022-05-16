@@ -135,26 +135,39 @@ export class Tetrimino {
         this.x += adjustment[0];
         this.y += adjustment[1];
 
-        // Check if the tetrimino is valid by iterating over all solid blocks,
-        // translating their position into an absolute one through the position
-        // of the tetrimino, and checking if they are either outside of the board,
-        // or are already solid blocks. If one of these (in)validity check passes,
-        // we rollback our state and then return false.
-        for (let y = 0; y < this.pixels.length; y++) {
-            for (let x = 0; x < this.pixels[y].length; x++) {
-                const pixel = this.pixels[y][x];
+        // This code is a bit ugly because we're doing some micro-optimizations to get better performance in this old runtime.
+        const len1 = this.pixels.length;
+        const len2 = this.pixels[0].length;
+        let pixel: Pixel | null;
+        let row: (Pixel | null)[];
+        let absX = 0;
+        let absY = 0;
 
+        for (let y = 0; y < len1; y++) {
+            absY = this.y + y;
+
+            // If this row is out of bounds, revert.
+            if (absY < 0 || absY >= this.game.size[0][0]) {
+                // Revert the tetrimino to its previous position
+                this.x = stasis[0];
+                this.y = stasis[1];
+                return false;
+            }
+            
+            row = this.game.board[absY];
+
+            for (let x = 0; x < len2; x++) {
+                pixel = this.pixels[y][x];
+                
                 if (pixel) {
-                    const [absoluteX, absoluteY] = [
-                        this.x + x,
-                        this.y + y,
-                    ];
+                    absX = this.x + x;
 
                     if (
-                        absoluteX < 0 || absoluteX >= this.game.size[1][0] ||
-                        absoluteY < 0 || absoluteY >= this.game.size[0][0] ||
-                        this.game.board[absoluteY]?.[absoluteX]?.solid
+                        // If this pixel is out of bounds, or the pixel is already solidifed, revert.
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        absX < 0 || absX >= this.game.size[1][0] || (row && row[absX] && row[absX]!.solid)
                     ) {
+                        // Revert the tetrimino to its previous position
                         this.x = stasis[0];
                         this.y = stasis[1];
                         return false;

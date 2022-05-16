@@ -208,23 +208,31 @@ export class Tetrimino {
     public rotate (rotation: Rotation, direction: Direction): boolean {
         const t = +Date.now();
 
-        if (rotation === Rotation.SIMPLE) {
-            const rotated: (Pixel | null)[][] = [];
+        // Micro-optimizations for legacy engine that is forced.
+        const ylen = this.pixels.length;
+        const xlen = this.pixels[0].length;
+        let rotated: (Pixel | null)[][];
+        let temp1: (Pixel | null)[];
+        let temp2: (Pixel | null)[];
 
-            for (let col = 0; col < this.pixels[0].length; col++) {
-              const temp: (Pixel | null)[] = [];
-        
-              for (let row = 0; row < this.pixels.length; row++) {
+        if (rotation === Rotation.SIMPLE) {
+            rotated = new Array(xlen) as (Pixel | null)[][];
+
+            for (let col = 0; col < xlen; col++) {
+              temp1 = new Array(ylen) as (Pixel | null)[];
+
+              for (let row = 0; row < ylen; row++) {
+                temp2 = this.game.board[this.y + row];
                 if (direction === Direction.CLOCKWISE) {
-                  if (this.game.board[this.y + row]?.[this.x + col] !== null) return false;
-                  temp.push(this.pixels[this.pixels.length - 1 - row][col]);
+                  if (temp2 && temp2[this.x + col] !== null) return false;
+                  temp1[row] = this.pixels[ylen - 1 - row][col];
                 } else {
-                  if (this.game.board[this.y + col]?.[this.x + row] !== null) return false;
-                  temp.push(this.pixels[row][this.pixels[0].length - 1 - col]);
+                  if (temp2 && temp2[this.x + row] !== null) return false;
+                  temp1[row] = this.pixels[row][xlen - 1 - col];
                 }
               }
         
-              rotated.push(temp);
+              rotated[col] = temp1;
             }
         
             this.pixels = rotated;

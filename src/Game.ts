@@ -168,6 +168,8 @@ export class Game {
 
         // Allow the user to swap pieces again.
         this.swapped = false;
+        // Indicate the swap can be performed again.
+        setText("held-lock-state", "✔️");
 
         this.active.solidify();
         this.active.draw();
@@ -269,6 +271,9 @@ export class Game {
         if (!this.held) return false;
         this.held.held = true;
         this.held.active = false;
+
+        // Indicate a swap was preformed.
+        setText("held-lock-state", "❌");
 
         // Draw the new active piece newly held piece.
         this.held.clear();

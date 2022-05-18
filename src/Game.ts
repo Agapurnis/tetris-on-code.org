@@ -295,8 +295,7 @@ export class Game {
             board: this.board.map((row) => row.map((pixel) => pixel ? [pixel.state, pixel.tetrimino] as const : null)),
             active: this.active ? this.active.serialize() : null,
             held: this.held ? this.held.serialize() : null,
-
-            state: [this.paused, this.ended]
+            state: [this.paused, this.ended, this.swapped]
         };
     }
 
@@ -306,6 +305,7 @@ export class Game {
         this.size = data.size;
         this.board = data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0], true) : null));
         this.bag = Bag.deserialize(data.bag);
+        this.swapped = data.state[2];
         this.paused = data.state[0];
         this.ended = data.state[1];
         this.score = data.score;
@@ -316,6 +316,7 @@ export class Game {
     public static deserialize (data: ReturnType<Game["serialize"]>) {
         const game = new Game(null!, data.size, data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0], true) : null)));
         game.bag = Bag.deserialize(data.bag);
+        game.swapped = data.state[2];
         game.paused = data.state[0];
         game.ended = data.state[1];
         game.score = data.score;

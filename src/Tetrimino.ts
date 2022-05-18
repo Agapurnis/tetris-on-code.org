@@ -330,13 +330,19 @@ export class Tetrimino {
         const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
         const shouldDrawRelative = this.active || this.held;
 
+        // We'll have an offset to make held pieces near appear in the center of their display.
+        const [offsetX, offsetY] = this.active ? [0, 0] : [
+            Math.round((4 - this.pixels[0].length) / 2),
+            Math.round((4 - this.pixels   .length) / 2)
+        ]; 
+
         // Draw the tetrimino
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
                 if (shouldDrawRelative ? pixel : pixel && pixel.solid) {
                     rect(
-                        (shouldDrawRelative ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
-                        (shouldDrawRelative ? y : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
+                        (shouldDrawRelative ? x + offsetX : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
+                        (shouldDrawRelative ? y + offsetY : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
                         sizeX,
                         sizeY,
                     );

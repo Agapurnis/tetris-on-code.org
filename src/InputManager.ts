@@ -35,6 +35,7 @@ export class InputManager {
     // #region Static Mappings
     public static readonly DEFAULT_MAPPINGS = [
         ["press", ["p"], (game: Game) => game.paused ? game.unpause() : game.pause()],
+        ["press", ["c"], (game: Game) => game.trySwapHeld()],
         ["press", [" "], (game: Game) => game.active?.hardDrop()],
         ["press", ["a"], (game: Game) => game.active?.move([-1,  0]) && game.active?.moveCanvas()],
         ["press", ["d"], (game: Game) => game.active?.move([+1,  0]) && game.active?.moveCanvas()],

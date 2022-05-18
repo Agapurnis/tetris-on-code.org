@@ -18,11 +18,11 @@
   },
   "name": "tetris-on-code-dot-org",
   "description": "A terrifying Tetris implementation written for usage on [code.org](https://code.org/)",
-  "version": "0.5.2",
+  "version": "0.6.1",
   "main": "out/bundle.js",
   "scripts": {
     "build": "npx cross-env NODE_ENV=PRODUCTION  npx rollup -c",
-    "watch": "npx cross-env NODE_ENV=DEVELOPMENT npx rollup -c --watch",
+    "watch": "npx cross-env NODE_ENV=DEVELOPMENT npx rollup -cw",
     "lint": "npx eslint src/",
     "lint:staged": "npx lint-staged -c ./lint-staged.config.json"
   },

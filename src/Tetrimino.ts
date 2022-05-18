@@ -34,7 +34,7 @@ const enum Facing {
     SOUTH, WEST
 }
 
-const TETRIMINO_PIXEL_STATES: Record<TetriminoType, PixelState[][]> = {
+export const TETRIMINO_PIXEL_STATES: Record<TetriminoType, PixelState[][]> = {
     [TetriminoType.O]: [
         [PixelState.VOID, PixelState.FULL, PixelState.FULL, PixelState.VOID],
         [PixelState.VOID, PixelState.FULL, PixelState.FULL, PixelState.VOID],
@@ -135,26 +135,32 @@ export class Tetrimino {
         this.x += adjustment[0];
         this.y += adjustment[1];
 
-        // Check if the tetrimino is valid by iterating over all solid blocks,
-        // translating their position into an absolute one through the position
-        // of the tetrimino, and checking if they are either outside of the board,
-        // or are already solid blocks. If one of these (in)validity check passes,
-        // we rollback our state and then return false.
-        for (let y = 0; y < this.pixels.length; y++) {
-            for (let x = 0; x < this.pixels[y].length; x++) {
-                const pixel = this.pixels[y][x];
+        // This code is a bit ugly because we're doing some micro-optimizations to get better performance in this old runtime.
+        const len1 = this.pixels.length;
+        const len2 = this.pixels[0].length;
+        let pixel: Pixel | null;
+        let row: (Pixel | null)[];
+        let absX = 0;
+        let absY = 0;
 
+        for (let y = 0; y < len1; y++) {
+            absY = this.y + y;            
+            row = this.game.board[absY];
+
+            for (let x = 0; x < len2; x++) {
+                pixel = this.pixels[y][x];
+                
                 if (pixel) {
-                    const [absoluteX, absoluteY] = [
-                        this.x + x,
-                        this.y + y,
-                    ];
+                    absX = this.x + x;
 
                     if (
-                        absoluteX < 0 || absoluteX >= this.game.size[1][0] ||
-                        absoluteY < 0 || absoluteY >= this.game.size[0][0] ||
-                        this.game.board[absoluteY]?.[absoluteX]?.solid
+                        // If this pixel is out of bounds, or the pixel is already solidifed, revert.
+                        absX < 0 || absX >= this.game.size[1][0] || 
+                        absY < 0 || absY >= this.game.size[0][0] ||
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        (row && row[absX] && row[absX]!.solid)
                     ) {
+                        // Revert the tetrimino to its previous position
                         this.x = stasis[0];
                         this.y = stasis[1];
                         return false;
@@ -164,7 +170,7 @@ export class Tetrimino {
         }
 
         // Invalid zenith if the tetrimino moved horizontally
-        if (adjustment[0] !== 0) this.zenithMemoValid = false;
+        if (adjustment[0] !== 0) this.invalidateZenithMemo();
 
         // Indicate success without rollback
         return true;
@@ -202,23 +208,31 @@ export class Tetrimino {
     public rotate (rotation: Rotation, direction: Direction): boolean {
         const t = +Date.now();
 
-        if (rotation === Rotation.SIMPLE) {
-            const rotated: (Pixel | null)[][] = [];
+        // Micro-optimizations for legacy engine that is forced.
+        const ylen = this.pixels.length;
+        const xlen = this.pixels[0].length;
+        let rotated: (Pixel | null)[][];
+        let temp1: (Pixel | null)[];
+        let temp2: (Pixel | null)[];
 
-            for (let col = 0; col < this.pixels[0].length; col++) {
-              const temp: (Pixel | null)[] = [];
-        
-              for (let row = 0; row < this.pixels.length; row++) {
+        if (rotation === Rotation.SIMPLE) {
+            rotated = new Array(xlen) as (Pixel | null)[][];
+
+            for (let col = 0; col < xlen; col++) {
+              temp1 = new Array(ylen) as (Pixel | null)[];
+
+              for (let row = 0; row < ylen; row++) {
+                temp2 = this.game.board[this.y + row];
                 if (direction === Direction.CLOCKWISE) {
-                  if (this.game.board[this.y + row]?.[this.x + col] !== null) return false;
-                  temp.push(this.pixels[this.pixels.length - 1 - row][col]);
+                  if (temp2 && temp2[this.x + col] !== null) return false;
+                  temp1[row] = this.pixels[ylen - 1 - row][col];
                 } else {
-                  if (this.game.board[this.y + col]?.[this.x + row] !== null) return false;
-                  temp.push(this.pixels[row][this.pixels[0].length - 1 - col]);
+                  if (temp2 && temp2[this.x + row] !== null) return false;
+                  temp1[row] = this.pixels[row][xlen - 1 - col];
                 }
               }
         
-              rotated.push(temp);
+              rotated[col] = temp1;
             }
         
             this.pixels = rotated;
@@ -227,7 +241,7 @@ export class Tetrimino {
                 console.log(`Rotated (simple) in ${+Date.now() - t}ms`);
             }
         
-            this.zenithMemoValid = false;
+            this.invalidateZenithMemo();
 
             return true;
         }
@@ -276,7 +290,7 @@ export class Tetrimino {
                         console.log(`Rotated (super) in ${+Date.now() - t}ms`);
                     }
 
-                    this.zenithMemoValid = false;
+                    this.invalidateZenithMemo();
 
                     return true;
                 } else {
@@ -299,34 +313,44 @@ export class Tetrimino {
     }
 
     /**
-      * Draws the tetrimino. If this piece is falling, it *should only be called once unless a rotation is preformed*.
+      * Draws the tetrimino and it's ghost. If this piece is falling, it should only be called when necessary.
       * Note that the visual appearance of the tetrimino is deterministic on the state, notably the following:
       *   - Type of tetrimino
       *   - User configuration
       *   - Whether or not it has solidified
+      *   - Whether or not is is being held
       */
     public draw () {
-        setActiveCanvas(this.active ? "falling" : "solid");
+        setActiveCanvas(this.active ? "falling" : this.held ? "held" : "solid");
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
         // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
         const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
         const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
+        const shouldDrawRelative = this.active || this.held;
+
+        // We'll have an offset to make held pieces near appear in the center of their display.
+        const [offsetX, offsetY] = this.active ? [0, 0] : [
+            Math.round((4 - this.pixels[0].length) / 2),
+            Math.round((4 - this.pixels   .length) / 2)
+        ]; 
 
         // Draw the tetrimino
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
-                if (this.active ? pixel : pixel && pixel.solid) {
+                if (shouldDrawRelative ? pixel : pixel && pixel.solid) {
                     rect(
-                        (this.active ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
-                        (this.active ? y : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
+                        (shouldDrawRelative ? x + offsetX : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
+                        (shouldDrawRelative ? y + offsetY : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
                         sizeX,
                         sizeY,
                     );
                 }
             });
         });
+
+        if (!this.active) return;
 
         setActiveCanvas("ghost");
         setStrokeColor("#000000");
@@ -351,10 +375,15 @@ export class Tetrimino {
      * Clears the active tetrimino's canvas alongside it's ghost's.
      */
     public clear () {
-        setActiveCanvas("falling");
-        clearCanvas();
-        setActiveCanvas("ghost");
-        clearCanvas();
+        if (this.active) {
+            setActiveCanvas("falling");
+            clearCanvas();
+            setActiveCanvas("ghost");
+            clearCanvas();
+        } else {
+            setActiveCanvas("held");
+            clearCanvas();
+        }
     }
 
     /**
@@ -380,6 +409,8 @@ export class Tetrimino {
 
     public hardDrop () {
         const depth = this.zenith() - this.y;
+        if (depth === 0) return;
+
         while (this.move([0, depth])) { 
             // NOOP - Self terminating movement loop.
         }
@@ -389,6 +420,10 @@ export class Tetrimino {
 
     private zenithMemoValid = false;
     private zenithMemo!: number;
+
+    public invalidateZenithMemo () {
+        this.zenithMemoValid = false;
+    }   
 
     /**
      * @returns the highest safe point this tetrimino can be dropped, that point being the `y` of the tetrimino if it were dropped to that position

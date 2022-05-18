@@ -34,7 +34,7 @@ const enum Facing {
     SOUTH, WEST
 }
 
-const TETRIMINO_PIXEL_STATES: Record<TetriminoType, PixelState[][]> = {
+export const TETRIMINO_PIXEL_STATES: Record<TetriminoType, PixelState[][]> = {
     [TetriminoType.O]: [
         [PixelState.VOID, PixelState.FULL, PixelState.FULL, PixelState.VOID],
         [PixelState.VOID, PixelState.FULL, PixelState.FULL, PixelState.VOID],

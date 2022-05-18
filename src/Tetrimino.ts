@@ -34,7 +34,7 @@ const enum Facing {
     SOUTH, WEST
 }
 
-const TETRIMINO_PIXEL_STATES: Record<TetriminoType, PixelState[][]> = {
+export const TETRIMINO_PIXEL_STATES: Record<TetriminoType, PixelState[][]> = {
     [TetriminoType.O]: [
         [PixelState.VOID, PixelState.FULL, PixelState.FULL, PixelState.VOID],
         [PixelState.VOID, PixelState.FULL, PixelState.FULL, PixelState.VOID],
@@ -170,7 +170,7 @@ export class Tetrimino {
         }
 
         // Invalid zenith if the tetrimino moved horizontally
-        if (adjustment[0] !== 0) this.zenithMemoValid = false;
+        if (adjustment[0] !== 0) this.invalidateZenithMemo();
 
         // Indicate success without rollback
         return true;
@@ -241,7 +241,7 @@ export class Tetrimino {
                 console.log(`Rotated (simple) in ${+Date.now() - t}ms`);
             }
         
-            this.zenithMemoValid = false;
+            this.invalidateZenithMemo();
 
             return true;
         }
@@ -290,7 +290,7 @@ export class Tetrimino {
                         console.log(`Rotated (super) in ${+Date.now() - t}ms`);
                     }
 
-                    this.zenithMemoValid = false;
+                    this.invalidateZenithMemo();
 
                     return true;
                 } else {
@@ -313,34 +313,44 @@ export class Tetrimino {
     }
 
     /**
-      * Draws the tetrimino. If this piece is falling, it *should only be called once unless a rotation is preformed*.
+      * Draws the tetrimino and it's ghost. If this piece is falling, it should only be called when necessary.
       * Note that the visual appearance of the tetrimino is deterministic on the state, notably the following:
       *   - Type of tetrimino
       *   - User configuration
       *   - Whether or not it has solidified
+      *   - Whether or not is is being held
       */
     public draw () {
-        setActiveCanvas(this.active ? "falling" : "solid");
+        setActiveCanvas(this.active ? "falling" : this.held ? "held" : "solid");
         setStrokeColor("#000000");
         setFillColor(this.game.session.user.theme.tetriminos[this.type][this.state]);
 
         // Size for each pixel based on the allocated size for the game board canvas, and the actual size of the game.
         const sizeX = ALLOCATED_WIDTH  / this.game.size[1][1];
         const sizeY = ALLOCATED_HEIGHT / this.game.size[0][1];
+        const shouldDrawRelative = this.active || this.held;
+
+        // We'll have an offset to make held pieces near appear in the center of their display.
+        const [offsetX, offsetY] = this.active ? [0, 0] : [
+            Math.round((4 - this.pixels[0].length) / 2),
+            Math.round((4 - this.pixels   .length) / 2)
+        ]; 
 
         // Draw the tetrimino
         this.pixels.forEach((row, y) => {
             row.forEach((pixel, x) => {
-                if (this.active ? pixel : pixel && pixel.solid) {
+                if (shouldDrawRelative ? pixel : pixel && pixel.solid) {
                     rect(
-                        (this.active ? x : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
-                        (this.active ? y : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
+                        (shouldDrawRelative ? x + offsetX : this.x + x - (this.game.size[1][0] - this.game.size[1][1])) * sizeX,
+                        (shouldDrawRelative ? y + offsetY : this.y + y - (this.game.size[0][0] - this.game.size[0][1])) * sizeY,
                         sizeX,
                         sizeY,
                     );
                 }
             });
         });
+
+        if (!this.active) return;
 
         setActiveCanvas("ghost");
         setStrokeColor("#000000");
@@ -365,10 +375,15 @@ export class Tetrimino {
      * Clears the active tetrimino's canvas alongside it's ghost's.
      */
     public clear () {
-        setActiveCanvas("falling");
-        clearCanvas();
-        setActiveCanvas("ghost");
-        clearCanvas();
+        if (this.active) {
+            setActiveCanvas("falling");
+            clearCanvas();
+            setActiveCanvas("ghost");
+            clearCanvas();
+        } else {
+            setActiveCanvas("held");
+            clearCanvas();
+        }
     }
 
     /**
@@ -403,6 +418,10 @@ export class Tetrimino {
 
     private zenithMemoValid = false;
     private zenithMemo!: number;
+
+    public invalidateZenithMemo () {
+        this.zenithMemoValid = false;
+    }   
 
     /**
      * @returns the highest safe point this tetrimino can be dropped, that point being the `y` of the tetrimino if it were dropped to that position

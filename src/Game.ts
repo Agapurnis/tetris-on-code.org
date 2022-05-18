@@ -43,6 +43,10 @@ export class Game {
 
     public ended = false;
     public paused = true;
+    /**
+     * Whether or not a swap has occured in between the time since the last piece-drop.
+     */
+    public swapped = false;
     public bag = new Bag();
     public inputs = new InputManager(this, InputManager.DEFAULT_MAPPINGS);
     public timer: [number, number] = [0, 0];
@@ -60,8 +64,6 @@ export class Game {
       *  - The game is paused by default.
       *  - Input listening only begins after this start of the game.
       *  - An initial random tetrimino is chosen from the bag.
-      * 
-      * 
       */
     public start (ms = /* 400 */ 200): void {
         this.inputs.listen();
@@ -164,6 +166,11 @@ export class Game {
             throw new Error("No active was found, even though it should always be filled!\nThis likely means a tick was ran after the game should have been ended, since no more spots are available.");
         }
 
+        // Allow the user to swap pieces again.
+        this.swapped = false;
+        // Indicate the swap can be performed again.
+        setText("held-lock-state", "✔️");
+
         this.active.solidify();
         this.active.draw();
         this.active = Tetrimino.ofTypeForGame(this.bag.pick(), this);
@@ -216,6 +223,69 @@ export class Game {
         });
     }
 
+    /**
+     * @returns whether or not the swap was performed
+     * @remarks does not swap if one of the following is true:
+     *  - The game is paused.
+     *  - The game has ended.
+     *  - The user has already swapped in the time since the last piece-drop.
+     */
+    public trySwapHeld (): boolean {
+        if (this.ended) return false;
+        if (this.paused) return false;
+        if (this.swapped) return false;
+
+        // Prevent swapping again until after the next piece-drop.
+        this.swapped = true;
+
+        // Put our active and held pieces into variables for usage after they are replaced.
+        const active = this.active;
+        const held = this.held;
+
+        // Put the held piece into the active slot.
+        this.active = held ?? Tetrimino.ofTypeForGame(this.bag.pick(), this);
+        if (!this.active) return false;
+        this.active.held = false;
+        this.active.active = true;
+
+        // Set the position of this piece to the position of the (previously) active piece.
+        this.active.x = active!.x;
+        this.active.y = active!.y;
+
+        // Check for collisions.
+        if (!this.active.move([0, 0])) {
+            // If there are collisions, put the active piece back into the held slot.
+            this.held = this.active;
+            this.held.held = true;
+            this.held.active = false;
+            // Put our previously-active piece back into the active slot.
+            this.active = active;
+            // We will set `this.swapped` to be false, as we want to allow the user to swap again despite this.
+            this.swapped = false;
+            // Return false, as the swap was not performed.
+            return false;
+        }
+
+        // Put the (previously) active piece into the held slot.
+        this.held = active;
+        if (!this.held) return false;
+        this.held.held = true;
+        this.held.active = false;
+
+        // Indicate a swap was preformed.
+        setText("held-lock-state", "❌");
+
+        // Draw the new active piece newly held piece.
+        this.held.clear();
+        this.held.draw();
+        this.active.invalidateZenithMemo();
+        this.active.moveCanvas();
+        this.active.clear();
+        this.active.draw();
+        
+        return true;
+    }
+
     // #region serde, mut
     public serialize () {
         return {
@@ -225,8 +295,7 @@ export class Game {
             board: this.board.map((row) => row.map((pixel) => pixel ? [pixel.state, pixel.tetrimino] as const : null)),
             active: this.active ? this.active.serialize() : null,
             held: this.held ? this.held.serialize() : null,
-
-            state: [this.paused, this.ended]
+            state: [this.paused, this.ended, this.swapped]
         };
     }
 
@@ -236,6 +305,7 @@ export class Game {
         this.size = data.size;
         this.board = data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0], true) : null));
         this.bag = Bag.deserialize(data.bag);
+        this.swapped = data.state[2];
         this.paused = data.state[0];
         this.ended = data.state[1];
         this.score = data.score;
@@ -246,6 +316,7 @@ export class Game {
     public static deserialize (data: ReturnType<Game["serialize"]>) {
         const game = new Game(null!, data.size, data.board.map((row, y) => row.map((pixel, x) => pixel ? new Pixel([x, y], pixel[1], pixel[0], true) : null)));
         game.bag = Bag.deserialize(data.bag);
+        game.swapped = data.state[2];
         game.paused = data.state[0];
         game.ended = data.state[1];
         game.score = data.score;

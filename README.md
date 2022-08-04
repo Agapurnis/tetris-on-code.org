@@ -8,5 +8,5 @@ I had an assignment for a class to make something on https://code.org/, and I th
 
 ## Official Links
 
-- Production: https://studio.code.org/projects/applab/rH9vWmzHlRtJukvf6A2vaCYUag8K08Apsd9v1nECCLY/edit
-- Development: https://studio.code.org/projects/applab/DaYuzTFKfO5UC0oi9-G7X2k7sOD3XRiFdOxRpNW0BVA/edit
+- Production: https://studio.code.org/projects/applab/rH9vWmzHlRtJukvf6A2vaCYUag8K08Apsd9v1nECCLY
+- Development: https://studio.code.org/projects/applab/DaYuzTFKfO5UC0oi9-G7X2k7sOD3XRiFdOxRpNW0BVA
